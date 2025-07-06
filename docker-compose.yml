@@ -14,7 +14,7 @@ services:
       - ./ssl:/app/ssl
       - ./custom-js:/app/custom-js
       - ./custom-css:/app/custom-css
-      - ./data/app/data
+      - ./data:/app/data
       - ./openlist-local-tree:/app/openlist-local-tree
     ports:
       - 8095:8095 # http
