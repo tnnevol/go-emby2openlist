@@ -5,11 +5,9 @@ import (
 	"encoding/xml"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/lib/ffmpeg"
 	"github.com/bogem/id3v2"
-	"github.com/dhowden/tag"
 )
 
 // MusicNFO 音乐元数据
@@ -18,29 +16,23 @@ type MusicNFO struct {
 	Title   string   `xml:"title,omitempty"`
 	Artist  string   `xml:"artist,omitempty"`
 	Album   string   `xml:"album,omitempty"`
-	Year    int      `xml:"year,omitempty"`
-	Genre   string   `xml:"genre,omitempty"`
+	Year    string   `xml:"year,omitempty"`
 	Track   int      `xml:"track,omitempty"`
 	Lyrics  string   `xml:"lyrics,omitempty"`
 	Comment string   `xml:"comment,omitempty"`
 }
 
 // WriteNFO 写入音乐元数据到本地
-func WriteNFO(filePath string, meta tag.Metadata) error {
-	if meta == nil {
-		return fmt.Errorf("元数据为空")
-	}
+func WriteNFO(filePath string, meta ffmpeg.Music) error {
 
-	track, _ := meta.Track()
 	info := MusicNFO{
-		Title:   meta.Title(),
-		Artist:  meta.Artist(),
-		Album:   meta.Album(),
-		Year:    meta.Year(),
-		Genre:   meta.Genre(),
-		Track:   track,
-		Lyrics:  meta.Lyrics(),
-		Comment: meta.Comment(),
+		Title:   meta.Title,
+		Artist:  meta.Artist,
+		Album:   meta.Album,
+		Year:    meta.Date,
+		Track:   meta.Track,
+		Lyrics:  meta.Lyrics,
+		Comment: meta.Comment,
 	}
 
 	f, err := os.Create(filePath)
@@ -54,36 +46,22 @@ func WriteNFO(filePath string, meta tag.Metadata) error {
 	return enc.Encode(info)
 }
 
-// WritePic 写入音乐封面到本地
-func WritePic(filePath string, meta tag.Metadata) error {
-	if meta == nil || meta.Picture() == nil {
-		return fmt.Errorf("元数据为空")
-	}
-	return os.WriteFile(filePath, meta.Picture().Data, os.ModePerm)
-}
-
 // WriteFakeMP3 将音乐元数据写入一个本地虚假 mp3 文件中, 需要先初始化 ffmpeg
 //
 // 可通过 d 参数指定生成音频的时长
-func WriteFakeMP3(filePath string, meta tag.Metadata, d time.Duration) error {
-	if meta == nil {
-		return fmt.Errorf("元数据为空")
-	}
-
+func WriteFakeMP3(filePath string, meta ffmpeg.Music, pic []byte) error {
 	// 创建 ID3 标签
 	id3tag := id3v2.NewEmptyTag()
 
-	id3tag.SetTitle(meta.Title())
-	id3tag.SetArtist(meta.Artist())
-	id3tag.SetAlbum(meta.Album())
-	id3tag.SetYear(fmt.Sprintf("%d", meta.Year()))
-	id3tag.SetGenre(meta.Genre())
+	id3tag.SetTitle(meta.Title)
+	id3tag.SetArtist(meta.Artist)
+	id3tag.SetAlbum(meta.Album)
+	id3tag.SetYear(meta.Date)
+	id3tag.SetGenre(meta.Genre)
 
-	if t, _ := meta.Track(); t > 0 {
-		id3tag.AddTextFrame("TRCK", id3v2.EncodingUTF8, fmt.Sprintf("%d", t))
-	}
+	id3tag.AddTextFrame("TRCK", id3v2.EncodingUTF8, fmt.Sprintf("%d", meta.Track))
 
-	if l := meta.Lyrics(); l != "" {
+	if l := meta.Lyrics; l != "" {
 		id3tag.AddUnsynchronisedLyricsFrame(id3v2.UnsynchronisedLyricsFrame{
 			Encoding:          id3v2.EncodingUTF8,
 			Language:          "eng",
@@ -92,13 +70,13 @@ func WriteFakeMP3(filePath string, meta tag.Metadata, d time.Duration) error {
 		})
 	}
 
-	if pic := meta.Picture(); pic != nil {
+	if len(pic) > 0 {
 		picFrame := id3v2.PictureFrame{
 			Encoding:    id3v2.EncodingUTF8,
-			MimeType:    pic.MIMEType,
+			MimeType:    "image/jpeg",
 			PictureType: id3v2.PTFrontCover,
 			Description: "Cover",
-			Picture:     pic.Data,
+			Picture:     pic,
 		}
 		id3tag.AddAttachedPicture(picFrame)
 	}
@@ -109,7 +87,7 @@ func WriteFakeMP3(filePath string, meta tag.Metadata, d time.Duration) error {
 		return fmt.Errorf("写入标签至缓冲区发生异常: %w", err)
 	}
 
-	silent, err := ffmpeg.GenSilentMP3Bytes(d.Seconds())
+	silent, err := ffmpeg.GenSilentMP3Bytes(meta.Duration.Seconds())
 	if err != nil {
 		return fmt.Errorf("生成虚拟静音音频失败: %w", err)
 	}
