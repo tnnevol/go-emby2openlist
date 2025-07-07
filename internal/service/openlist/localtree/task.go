@@ -18,6 +18,8 @@ import (
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/mp4s"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/trys"
+	"github.com/dhowden/tag"
 )
 
 // FileTask 包含同步必要信息的文件结构
@@ -101,7 +103,12 @@ func (vw *VirtualWriter) Write(task FileTask, localPath string) error {
 	}
 
 	rmtUrl := sw.OpenlistPath(task)
-	info, err := ffmpeg.InspectInfo(rmtUrl)
+
+	var info ffmpeg.Info
+	err := trys.Try(func() (err error) {
+		info, err = ffmpeg.InspectInfo(rmtUrl)
+		return
+	}, 3, time.Second)
 	if err != nil {
 		return fmt.Errorf("调用 ffmpeg 失败: %w", err)
 	}
@@ -159,15 +166,23 @@ func (mw *MusicWriter) Write(task FileTask, localPath string) error {
 	rmtUrl := sw.OpenlistPath(task)
 	td := time.Second
 	if config.C.Openlist.LocalTreeGen.MusicRealDuration {
-		info, err := ffmpeg.InspectInfo(rmtUrl)
+		var info ffmpeg.Info
+		err := trys.Try(func() (err error) {
+			info, err = ffmpeg.InspectInfo(rmtUrl)
+			return
+		}, 3, time.Second)
 		if err != nil {
 			return fmt.Errorf("解析音乐时长失败: %w", err)
 		}
-		logf(colors.Gray, "提取文件时长 [%s]: %v", filepath.Base(task.Path), info.Duration)
 		td = info.Duration
+		logf(colors.Gray, "提取文件时长 [%s]: %v", filepath.Base(task.Path), td)
 	}
 
-	meta, err := music.ExtractRemoteTag(rmtUrl)
+	var meta tag.Metadata
+	err := trys.Try(func() (err error) {
+		meta, err = music.ExtractRemoteTag(rmtUrl)
+		return
+	}, 3, time.Second)
 	if err != nil {
 		return fmt.Errorf("提取音乐元数据失败: %w", err)
 	}
@@ -200,45 +215,31 @@ func (rw *RawWriter) Write(task FileTask, localPath string) error {
 	}
 
 	u := res.Data.RawUrl
-	cur, tot := 1, 3
 
-	file, err := os.Create(localPath)
-	if err != nil {
-		return fmt.Errorf("创建文件失败: %w", err)
-	}
-	defer file.Close()
+	err := trys.Try(func() (err error) {
+		file, err := os.Create(localPath)
+		if err != nil {
+			return fmt.Errorf("创建文件失败 [%s]: %w", localPath, err)
+		}
+		defer file.Close()
 
-	var writeErr error
-	for cur <= tot {
 		resp, err := https.Get(u).Do()
 		if err != nil {
-			writeErr = err
-			cur++
-			continue
+			return fmt.Errorf("请求 openlist 直链失败: %w", err)
 		}
+		defer resp.Body.Close()
 
 		if !https.IsSuccessCode(resp.StatusCode) {
-			resp.Body.Close()
-			writeErr = fmt.Errorf("请求 openlist 直链失败, 响应状态: %s", resp.Status)
-			cur++
-			continue
+			return fmt.Errorf("请求 openlist 直链失败, 响应状态: %s", resp.Status)
 		}
 
 		if _, err = io.Copy(file, resp.Body); err != nil {
-			resp.Body.Close()
-			if _, seekErr := file.Seek(0, io.SeekStart); seekErr != nil {
-				return fmt.Errorf("操作本地文件失败, 无法定位指针到文件起始位置: %w", seekErr)
-			}
-			writeErr = fmt.Errorf("写入 openlist 源文件到本地磁盘失败, 拷贝异常: %w", err)
-			cur++
-			continue
+			return fmt.Errorf("写入 openlist 源文件到本地磁盘失败, 拷贝异常: %w", err)
 		}
 
-		resp.Body.Close()
-		writeErr = nil
 		logf(colors.Gray, "下载 openlist 源文件 [%s]", filepath.Base(task.Path))
-		break
-	}
+		return
+	}, 3, time.Second)
 
-	return writeErr
+	return err
 }
