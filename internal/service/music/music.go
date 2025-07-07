@@ -11,8 +11,8 @@ import (
 	"github.com/dhowden/tag"
 )
 
-// MaxBytes 尝试从前 10KB 数据中读取出标签数据
-const MaxBytes = 10 * 1024 * 1024
+// MaxBytes 请求一小部分数据来解析媒体元数据
+const MaxBytes = 12 * 1024 * 1024
 
 var mu sync.Mutex
 
