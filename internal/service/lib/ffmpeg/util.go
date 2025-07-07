@@ -81,7 +81,10 @@ func resolveTrack(raw string) int {
 // resolveTitle 解析 ffmpeg 的 title 参数
 func resolveTitle(raw string) string {
 	if titleTiReg.MatchString(raw) {
-		return titleTiReg.FindStringSubmatch(raw)[1]
+		tiRes := titleTiReg.FindStringSubmatch(raw)[1]
+		if strings.TrimSpace(tiRes) != "" {
+			return tiRes
+		}
 	}
 	if titleReg.MatchString(raw) {
 		return titleReg.FindStringSubmatch(raw)[1]
