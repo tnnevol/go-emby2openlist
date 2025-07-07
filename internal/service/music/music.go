@@ -11,8 +11,8 @@ import (
 	"github.com/dhowden/tag"
 )
 
-// MaxBytes 尝试从前 5KB 数据中读取出标签数据
-const MaxBytes = 5 * 1024 * 1024
+// MaxBytes 尝试从前 10KB 数据中读取出标签数据
+const MaxBytes = 10 * 1024 * 1024
 
 var mu sync.Mutex
 

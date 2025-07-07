@@ -184,7 +184,7 @@ func (mw *MusicWriter) Write(task FileTask, localPath string) error {
 		return
 	}, 3, time.Second)
 	if err != nil {
-		return fmt.Errorf("提取音乐元数据失败: %w", err)
+		return fmt.Errorf("提取音乐元数据失败 [%s]: %w", filepath.Base(task.Path), err)
 	}
 	logf(colors.Gray, "提取音乐元数据 [%s]: %s %s", filepath.Base(task.Path), meta.Title(), meta.Artist())
 
