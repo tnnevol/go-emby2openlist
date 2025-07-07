@@ -19,7 +19,6 @@ import (
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/mp4s"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/trys"
-	"github.com/dhowden/tag"
 )
 
 // FileTask 包含同步必要信息的文件结构
@@ -164,31 +163,31 @@ func (mw *MusicWriter) Write(task FileTask, localPath string) error {
 	}
 
 	rmtUrl := sw.OpenlistPath(task)
-	td := time.Second
-	if config.C.Openlist.LocalTreeGen.MusicRealDuration {
-		var info ffmpeg.Info
-		err := trys.Try(func() (err error) {
-			info, err = ffmpeg.InspectInfo(rmtUrl)
-			return
-		}, 3, time.Second)
-		if err != nil {
-			return fmt.Errorf("解析音乐时长失败: %w", err)
-		}
-		td = info.Duration
-		logf(colors.Gray, "提取文件时长 [%s]: %v", filepath.Base(task.Path), td)
-	}
 
-	var meta tag.Metadata
+	var meta ffmpeg.Music
 	err := trys.Try(func() (err error) {
-		meta, err = music.ExtractRemoteTag(rmtUrl)
+		meta, err = ffmpeg.InspectMusic(rmtUrl)
 		return
 	}, 3, time.Second)
 	if err != nil {
 		return fmt.Errorf("提取音乐元数据失败 [%s]: %w", filepath.Base(task.Path), err)
 	}
-	logf(colors.Gray, "提取音乐元数据 [%s]: %s %s", filepath.Base(task.Path), meta.Title(), meta.Artist())
+	if meta.Duration == 0 {
+		meta.Duration = time.Second
+	}
 
-	return music.WriteFakeMP3(localPath, meta, td)
+	var pic []byte
+	err = trys.Try(func() (err error) {
+		pic, err = ffmpeg.ExtractMusicCover(rmtUrl)
+		return
+	}, 3, time.Second)
+	if err != nil {
+		return fmt.Errorf("提取音乐封面失败 [%s]: %w", filepath.Base(task.Path), err)
+	}
+
+	logf(colors.Gray, "提取音乐元数据 [%s]: [标题: %s] [艺术家: %s] [时长: %v]", filepath.Base(task.Path), meta.Title, meta.Artist, meta.Duration)
+
+	return music.WriteFakeMP3(localPath, meta, pic)
 }
 
 // RawWriter 请求 openlist 源文件写入本地

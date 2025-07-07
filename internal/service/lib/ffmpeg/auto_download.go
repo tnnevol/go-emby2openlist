@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
@@ -38,6 +39,27 @@ var (
 
 func ExecPath() string {
 	return execPath
+}
+
+type progressWriter struct {
+	Reader     io.Reader
+	Total      int64
+	Downloaded int64
+	PrintedPct int
+}
+
+func (p *progressWriter) Read(buf []byte) (int, error) {
+	n, err := p.Reader.Read(buf)
+	if n > 0 {
+		p.Downloaded += int64(n)
+		pct := int(float64(p.Downloaded) * 100 / float64(p.Total))
+		if pct != p.PrintedPct {
+			p.PrintedPct = pct
+			txt := fmt.Sprintf(colors.ToPurple("下载中... %3d%%"), pct)
+			fmt.Print("\r" + txt)
+		}
+	}
+	return n, err
 }
 
 // AutoDownloadExec 自动根据系统架构下载对应版本的 ffmpeg 到数据目录下
@@ -94,7 +116,26 @@ func AutoDownloadExec(parentPath string) error {
 		return fmt.Errorf("初始化二进制文件路径失败: %s, err: %v", execPath, err)
 	}
 	defer execFile.Close()
-	io.Copy(execFile, resp.Body)
+
+	var downloadErr error
+	totalBytesStr := resp.Header.Get("Content-Length")
+	totalBytes, err := strconv.Atoi(totalBytesStr)
+	if err != nil {
+		_, downloadErr = io.Copy(execFile, resp.Body)
+	} else {
+		pw := progressWriter{
+			Reader:     resp.Body,
+			Total:      int64(totalBytes),
+			PrintedPct: -1,
+		}
+		_, downloadErr = io.Copy(execFile, &pw)
+		fmt.Println()
+	}
+
+	if downloadErr != nil {
+		os.Remove(execPath)
+		return fmt.Errorf("下载失败: %w", downloadErr)
+	}
 
 	// 标记就绪状态
 	fmt.Printf(colors.ToGreen("ffmpeg 自动下载成功 ✓, 路径: %s\n"), execPath)

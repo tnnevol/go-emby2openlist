@@ -42,9 +42,6 @@ type LocalTreeGen struct {
 	// MusicContainers 音乐媒体容器, 原始串, 以英文逗号分割
 	MusicContainers string `yaml:"music-containers"`
 
-	// MusicRealDuration 是否写入音频的真实时长
-	MusicRealDuration bool `yaml:"music-real-duration"`
-
 	// RefreshInterval 刷新间隔, 单位: 分钟
 	RefreshInterval int `yaml:"refresh-interval"`
 
