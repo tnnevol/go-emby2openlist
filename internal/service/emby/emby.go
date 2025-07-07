@@ -15,17 +15,9 @@ import (
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/jsons"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/web/webport"
 
 	"github.com/gin-gonic/gin"
 )
-
-// NoRedirectClients 不使用重定向的客户端
-var NoRedirectClients = map[string]struct{}{
-	"Emby for iOS":     {},
-	"Emby for macOS":   {},
-	"Emby for Android": {},
-}
 
 func ProxySocket() func(*gin.Context) {
 
@@ -76,9 +68,7 @@ func ProxyOrigin(c *gin.Context) {
 	c.Request.Header.Set("X-Forwarded-For", c.ClientIP())
 	c.Request.Header.Set("X-Real-IP", c.ClientIP())
 
-	if err := https.ProxyPass(c.Request, c.Writer, origin); err != nil {
-		log.Printf(colors.ToRed("代理异常: %v"), err)
-	}
+	https.ProxyPass(c.Request, c.Writer, origin)
 }
 
 // TestProxyUri 用于测试的代理,
@@ -156,34 +146,6 @@ func TestProxyUri(c *gin.Context) bool {
 	c.Writer.Write(bodyBytes)
 
 	return true
-}
-
-// RedirectOrigin 将 GET 请求 308 重定向到源服务器
-// 其他请求走本地代理
-func RedirectOrigin(c *gin.Context) {
-	if c == nil {
-		return
-	}
-
-	if c.Request.Method != http.MethodGet {
-		ProxyOrigin(c)
-		return
-	}
-
-	if _, ok := NoRedirectClients[c.Query("X-Emby-Client")]; ok {
-		ProxyOrigin(c)
-		return
-	}
-
-	port, exist := c.Get(webport.GinKey)
-	if config.C.Ssl.Enable && (exist && port == webport.HTTPS) {
-		// https 只能走代理
-		ProxyOrigin(c)
-		return
-	}
-
-	origin := config.C.Emby.Host
-	c.Redirect(http.StatusPermanentRedirect, origin+c.Request.URL.String())
 }
 
 // ProxyRoot web 首页代理
