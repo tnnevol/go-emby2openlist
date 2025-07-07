@@ -157,11 +157,15 @@ func (mw *MusicWriter) Write(task FileTask, localPath string) error {
 	}
 
 	rmtUrl := sw.OpenlistPath(task)
-	info, err := ffmpeg.InspectInfo(rmtUrl)
-	if err != nil {
-		return fmt.Errorf("解析音乐时长失败: %w", err)
+	td := time.Second
+	if config.C.Openlist.LocalTreeGen.MusicRealDuration {
+		info, err := ffmpeg.InspectInfo(rmtUrl)
+		if err != nil {
+			return fmt.Errorf("解析音乐时长失败: %w", err)
+		}
+		logf(colors.Gray, "提取文件时长 [%s]: %v", filepath.Base(task.Path), info.Duration)
+		td = info.Duration
 	}
-	logf(colors.Gray, "提取文件时长 [%s]: %v", filepath.Base(task.Path), info.Duration)
 
 	meta, err := music.ExtractRemoteTag(rmtUrl)
 	if err != nil {
@@ -169,7 +173,7 @@ func (mw *MusicWriter) Write(task FileTask, localPath string) error {
 	}
 	logf(colors.Gray, "提取音乐元数据 [%s]: %s %s", filepath.Base(task.Path), meta.Title(), meta.Artist())
 
-	return music.WriteFakeMP3(localPath, meta, info.Duration)
+	return music.WriteFakeMP3(localPath, meta, td)
 }
 
 // RawWriter 请求 openlist 源文件写入本地
