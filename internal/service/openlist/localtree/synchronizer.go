@@ -101,9 +101,6 @@ func (s *Synchronizer) Sync() (added, deleted int, err error) {
 	// 初始化状态
 	okTaskChan := make(chan FileTask, 1024)
 	s.eg, s.ctx = errgroup.WithContext(context.Background())
-	defer func() {
-		s.eg, s.ctx = nil, nil
-	}()
 
 	// 读取根目录放置到任务通道中
 	if err := s.walkDir2SyncTasks("/"); err != nil {
