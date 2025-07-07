@@ -66,6 +66,8 @@
 
 - Strm 直链播放
 
+- [OpenList 本地目录树生成](https://github.com/AmbitiousJun/go-emby2openlist#%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%20OpenList%20%E6%9C%AC%E5%9C%B0%E7%9B%AE%E5%BD%95%E6%A0%91%E7%94%9F%E6%88%90)
+
 - OpenList 网盘转码直链播放
 
   > 该功能是通过请求 OpenList 的 `/api/fs/other` 接口来实现转码直链获取
@@ -122,7 +124,7 @@
 
 - 大接口缓存（OpenList 转码资源是通过代理并修改 PlaybackInfo 接口实现，请求比较耗时，每次大约 2~3 秒左右，目前已经利用 Go 语言的并发优势，尽力地将接口处理逻辑异步化，快的话 1 秒即可请求完成，该接口的缓存时间目前固定为 12 小时，后续如果出现异常再作调整）
 
-- 自定义注入 js/css（web）
+- [自定义注入 js/css（web）](https://github.com/AmbitiousJun/go-emby2openlist#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E5%85%A5-web-js-%E8%84%9A%E6%9C%AC)
 
 
 
@@ -151,7 +153,7 @@
 
    > 这一步前缀对应不上没关系，可以在配置中配置前缀映射 `path.emby2openlist` 解决
 
-3. 需要有一个中间服务，将网盘的文件数据挂载到系统本地磁盘上，才能被 Emby 读取到
+3. 需要有一个中间服务，将网盘的文件数据挂载到系统本地磁盘上，才能被 Emby 读取到（也可借助本项目的 [OpenList 目录树生成功能](https://github.com/AmbitiousJun/go-emby2openlist#%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%20OpenList%20%E6%9C%AC%E5%9C%B0%E7%9B%AE%E5%BD%95%E6%A0%91%E7%94%9F%E6%88%90)）
 
    > 目前我知道的比较好用的服务有两个：[rclone](https://rclone.org/) 和 [CloudDrive2](https://www.clouddrive2.com/)(简称 cd2)
    >
@@ -166,14 +168,6 @@
    > ⚠️ 不推荐中间服务直接去连接 OpenList 的 WebDav 服务，如果 OpenList Token 刷新失败或者是请求频繁被暂时屏蔽，会导致系统本地的挂载路径丢失，Emby 就会认为资源被删除了，然后元数据就丢了，再重新挂载回来后就需要重新刮削了。
 
 4. 服务器有安装 Docker
-
-   > 网上有很多 Docker 安装教程，这里我不细说
-   >
-   > 不过在国内，很多镜像服务器都不能正常使用了
-   >
-   > ~~这里推荐一个好用的[镜像加速源](https://baidu.com)~~
-   >
-   > 由于加速源作者服务器压力太大，我就不再这再推荐了
 
 5. Git
 
@@ -279,6 +273,8 @@ services:
       - ./ssl:/app/ssl
       - ./custom-js:/app/custom-js
       - ./custom-css:/app/custom-css
+      - ./data:/app/data
+      - ./openlist-local-tree:/app/openlist-local-tree
     ports:
       - 8095:8095 # http
       - 8094:8094 # https
@@ -290,7 +286,7 @@ services:
 docker-compose up -d --build
 ```
 
-## 关于 ssl
+## 使用说明 ssl
 
 **使用方式：**
 
@@ -307,7 +303,7 @@ docker-compose up -d --build
 
 可能有部分客户端会出现首次用 https 成功连上了，下次再打开客户端时，就自动变回到 http 连接，目前不太清楚具体的原因
 
-## 自定义注入 web js 脚本
+## 使用说明 自定义注入 web js 脚本
 
 **使用方式：** 将自定义脚本文件以 `.js` 后缀命名放到程序根目录下的 `custom-js` 目录后重启服务自动生效
 
@@ -324,7 +320,7 @@ docker-compose up -d --build
 | 隐藏无图片演员        | [actorPlus.js](https://raw.githubusercontent.com/newday-life/emby-web-mod/refs/heads/main/actorPlus/actorPlus.js) | ---                                                          |
 | 键盘 w/s 控制播放音量 | [audio-keyboard.js](https://github.com/AmbitiousJun/emby-css-js/blob/main/custom-js/audio-keyboard.js) | ---                                                          |
 
-## 自定义注入 web css 样式表
+## 使用说明 自定义注入 web css 样式表
 
 **使用方式：** 将自定义样式表文件以 `.css` 后缀命名放到程序根目录下的 `custom-css` 目录后重启服务自动生效
 
@@ -338,6 +334,10 @@ docker-compose up -d --build
 | -------------------- | ----------------------------------------------------------- | ------------------------------------------------------------ |
 | 调整音量调整控件位置 | [音量条+控件修改.css](https://t.me/Emby_smzase1/74)         | ---                                                          |
 | 节目界面样式美化     | [节目界面.txt](https://t.me/embycustomcssjs/10?comment=159) | [下拉框元素对齐](https://github.com/AmbitiousJun/emby-css-js/raw/refs/heads/main/custom-css/show-display.css) |
+
+## 使用说明 OpenList 本地目录树生成
+
+> 支持传统 strm 以及附带元数据的虚拟文件。目前功能正在开发测试中... 文档待补充
 
 ## 开发计划
 
