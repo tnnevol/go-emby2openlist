@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/lib/ffmpeg"
@@ -73,7 +74,7 @@ func WriteFakeMP3(filePath string, meta ffmpeg.Music, pic []byte) error {
 	if len(pic) > 0 {
 		picFrame := id3v2.PictureFrame{
 			Encoding:    id3v2.EncodingUTF8,
-			MimeType:    "image/jpeg",
+			MimeType:    http.DetectContentType(pic),
 			PictureType: id3v2.PTFrontCover,
 			Description: "Cover",
 			Picture:     pic,
