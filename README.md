@@ -66,7 +66,7 @@
 
 - Strm 直链播放
 
-- [OpenList 本地目录树生成](https://github.com/AmbitiousJun/go-emby2openlist#%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E-openlist-%E6%9C%AC%E5%9C%B0%E7%9B%AE%E5%BD%95%E6%A0%91%E7%94%9F%E6%88%90)
+- [OpenList 本地目录树生成](##使用说明 OpenList 本地目录树生成)
 
 - OpenList 网盘转码直链播放
 
@@ -124,7 +124,7 @@
 
 - 大接口缓存（OpenList 转码资源是通过代理并修改 PlaybackInfo 接口实现，请求比较耗时，每次大约 2~3 秒左右，目前已经利用 Go 语言的并发优势，尽力地将接口处理逻辑异步化，快的话 1 秒即可请求完成，该接口的缓存时间目前固定为 12 小时，后续如果出现异常再作调整）
 
-- [自定义注入 js/css（web）](https://github.com/AmbitiousJun/go-emby2openlist#%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E-%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E5%85%A5-web-js-%E8%84%9A%E6%9C%AC)
+- [自定义注入 js/css（web）](##使用说明 自定义注入 web js 脚本)
 
 
 
@@ -153,7 +153,7 @@
 
    > 这一步前缀对应不上没关系，可以在配置中配置前缀映射 `path.emby2openlist` 解决
 
-3. 需要有一个中间服务，将网盘的文件数据挂载到系统本地磁盘上，才能被 Emby 读取到（也可借助本项目的 [OpenList 目录树生成功能](https://github.com/AmbitiousJun/go-emby2openlist#%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E-openlist-%E6%9C%AC%E5%9C%B0%E7%9B%AE%E5%BD%95%E6%A0%91%E7%94%9F%E6%88%90)）
+3. 需要有一个中间服务，将网盘的文件数据挂载到系统本地磁盘上，才能被 Emby 读取到（也可借助本项目的 [OpenList 目录树生成功能](##使用说明 OpenList 本地目录树生成)）
 
    > 目前我知道的比较好用的服务有两个：[rclone](https://rclone.org/) 和 [CloudDrive2](https://www.clouddrive2.com/)(简称 cd2)
    >
