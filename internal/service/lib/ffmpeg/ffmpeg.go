@@ -137,7 +137,7 @@ func ExtractMusicCover(path string) ([]byte, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	cmd := exec.Command(execPath, "-i", path, "-an", "-vcodec", "copy", "-f", "image2pipe", "pipe:1")
+	cmd := exec.Command(execPath, "-i", path, "-an", "-vframes", "1", "-f", "image2", "-vcodec", "mjpeg", "pipe:1")
 
 	var out bytes.Buffer
 	var eb bytes.Buffer
