@@ -1,7 +1,9 @@
 package ffmpeg_test
 
 import (
+	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"testing"
 
@@ -59,6 +61,7 @@ func TestExtractMusicCover(t *testing.T) {
 	}
 	rmt := host + "/d/%E9%9F%B3%E4%B9%901/%E9%99%8D%E5%A4%AE%E5%8D%93%E7%8E%9B/%E9%99%8D%E5%A4%AE%E5%8D%93%E7%8E%9B%20-%20%E8%93%9D%E8%89%B2%E7%9A%84%E8%92%99%E5%8F%A4%E9%AB%98%E5%8E%9F.flac?sign=xkDoQzXTqq8xXrQzi_BQpqMu0Crh-_gbBuzAvP83nVw=:0"
 	bytes, err := ffmpeg.ExtractMusicCover(rmt)
+	fmt.Printf("http.DetectContentType(bytes): %v\n", http.DetectContentType(bytes))
 	if err != nil {
 		t.Fatal(err)
 	}
