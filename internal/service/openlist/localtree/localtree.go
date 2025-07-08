@@ -8,6 +8,7 @@ import (
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
+	"github.com/radovskyb/watcher"
 )
 
 // DirName 存放目录树的本地目录名称
@@ -20,12 +21,25 @@ func Init() error {
 		return nil
 	}
 
-	s := NewSynchronizer(filepath.Join(config.BasePath, DirName), 50)
+	dirAbs := filepath.Join(config.BasePath, DirName)
+
+	s := NewSynchronizer(dirAbs, 50)
 	if err := s.InitSnapshot(); err != nil {
 		return fmt.Errorf("初始化本地目录树快照失败: %w", err)
 	}
 
 	go startSync(s)
+
+	// 监听目录树变化, 更新快照
+	go watchDirChange(dirAbs, func(_ watcher.Event) {
+		s.DoIfIdle(func() {
+			err := s.InitSnapshot()
+			if err == nil {
+				logf(colors.Green, "检测到本地目录树发生变更, 快照已更新")
+			}
+		})
+	})
+
 	return nil
 }
 
