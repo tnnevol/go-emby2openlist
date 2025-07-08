@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/files"
@@ -287,6 +288,8 @@ func (s *Synchronizer) updateLocalTree(okTaskChan <-chan FileTask, added, delete
 		}
 	}
 
+	toDelete := []string{}
+
 	// 统计并删除本地过期文件
 	for path := range s.snapshot {
 		if _, exists := current.Check(path); exists {
@@ -294,12 +297,23 @@ func (s *Synchronizer) updateLocalTree(okTaskChan <-chan FileTask, added, delete
 		}
 
 		path = strings.TrimPrefix(path, "/")
-		err := files.ReleasePath(filepath.Join(s.baseDir, path))
-		if err != nil {
+		toDelete = append(toDelete, filepath.Join(s.baseDir, path))
+	}
+
+	maxCount := config.C.Openlist.LocalTreeGen.AutoRemoveMaxCount
+	if len(toDelete) > maxCount {
+		// 重新生成目录树快照
+		s.InitSnapshot()
+		logf(colors.Yellow, "过期文件数量 [%d] 超出最大限制 [%d], 跳过删除操作", len(toDelete), maxCount)
+		return
+	}
+
+	for _, path := range toDelete {
+		if err := files.ReleasePath(path); err != nil {
 			logf(colors.Red, "删除过期文件失败: %v", err)
-		} else {
-			*deleted++
+			continue
 		}
+		*deleted++
 	}
 
 	s.snapshot = current

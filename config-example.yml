@@ -63,6 +63,12 @@ openlist:
     #
     # 未开启 ffmpeg 辅助时, 由 strm 容器代替
     music-containers: mp3,flac
+    # 程序自动删除文件的最大数量
+    #
+    # 当检测到 openlist 目录树与本地比较缺失文件数量大于这个值时
+    # 程序会认为 openlist 出现挂载异常, 不对本地目录树进行删除操作
+    # 建议配置为 openlist 数据量的 3/4 左右
+    auto-remove-max-count: 6000
     refresh-interval: 10                     # 与远程同步刷新的间隔, 单位: 分钟
 
 # 该配置项目前只对阿里云盘生效, 如果你使用的是其他网盘, 请直接将 enable 设置为 false
