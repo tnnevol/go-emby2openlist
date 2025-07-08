@@ -31,6 +31,9 @@ type Synchronizer struct {
 	// eg 并发同步的执行组
 	eg *errgroup.Group
 
+	// syncMu 标记当前是否正在运行同步任务
+	syncMu sync.Mutex
+
 	// toSyncTasks 每次同步时的待处理子任务存放通道
 	toSyncTasks chan []FileTask
 }
@@ -42,6 +45,15 @@ func NewSynchronizer(baseDir string, pageSize int) *Synchronizer {
 		pageSize:    pageSize,
 		toSyncTasks: make(chan []FileTask, 1024),
 	}
+}
+
+// DoIfIdle 如果当前同步器没有在运行 则进行指定操作
+func (s *Synchronizer) DoIfIdle(fn func()) {
+	if !s.syncMu.TryLock() {
+		return
+	}
+	defer s.syncMu.Unlock()
+	fn()
 }
 
 // InitSnapshot 扫描本地磁盘 初始化快照
@@ -98,6 +110,9 @@ func (s *Synchronizer) InitSnapshot() error {
 
 // Sync 触发一次同步操作
 func (s *Synchronizer) Sync() (added, deleted int, err error) {
+	s.syncMu.Lock()
+	defer s.syncMu.Unlock()
+
 	// 初始化状态
 	okTaskChan := make(chan FileTask, 1024)
 	s.eg, s.ctx = errgroup.WithContext(context.Background())
