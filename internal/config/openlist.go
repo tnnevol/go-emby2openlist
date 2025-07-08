@@ -42,6 +42,9 @@ type LocalTreeGen struct {
 	// MusicContainers 音乐媒体容器, 原始串, 以英文逗号分割
 	MusicContainers string `yaml:"music-containers"`
 
+	// AutoRemoveMaxCount 自动删除文件的最大数量
+	AutoRemoveMaxCount int `yaml:"auto-remove-max-count"`
+
 	// RefreshInterval 刷新间隔, 单位: 分钟
 	RefreshInterval int `yaml:"refresh-interval"`
 
@@ -65,6 +68,10 @@ func (ltg *LocalTreeGen) Init() error {
 		if err := ffmpeg.AutoDownloadExec(BasePath); err != nil {
 			return fmt.Errorf("ffmpeg 初始化失败: %w", err)
 		}
+	}
+
+	if ltg.AutoRemoveMaxCount < 0 {
+		ltg.AutoRemoveMaxCount = 0
 	}
 
 	if ltg.RefreshInterval <= 0 {
