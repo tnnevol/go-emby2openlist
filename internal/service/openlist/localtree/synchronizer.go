@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
@@ -33,9 +32,6 @@ type Synchronizer struct {
 	// eg 并发同步的执行组
 	eg *errgroup.Group
 
-	// syncMu 标记当前是否正在运行同步任务
-	syncMu sync.Mutex
-
 	// toSyncTasks 每次同步时的待处理子任务存放通道
 	toSyncTasks chan []FileTask
 }
@@ -49,13 +45,35 @@ func NewSynchronizer(baseDir string, pageSize int) *Synchronizer {
 	}
 }
 
-// DoIfIdle 如果当前同步器没有在运行 则进行指定操作
-func (s *Synchronizer) DoIfIdle(fn func()) {
-	if !s.syncMu.TryLock() {
-		return
+// Sync 触发一次同步操作
+func (s *Synchronizer) Sync() (added, deleted int, err error) {
+	if err := s.InitSnapshot(); err != nil {
+		return 0, 0, fmt.Errorf("初始化快照异常: %w", err)
 	}
-	defer s.syncMu.Unlock()
-	fn()
+
+	// 初始化状态
+	okTaskChan := make(chan FileTask, 1024)
+	s.eg, s.ctx = errgroup.WithContext(context.Background())
+
+	// 读取根目录放置到任务通道中
+	if err := s.walkDir2SyncTasks("/"); err != nil {
+		return 0, 0, fmt.Errorf("获取 openlist 根目录异常: %w", err)
+	}
+
+	// 执行同步任务
+	go s.handleSyncTasks(okTaskChan)
+
+	// 更新快照和目录树
+	s.eg.Go(func() error {
+		s.updateLocalTree(okTaskChan, &added, &deleted)
+		return nil
+	})
+
+	// 等待任务完成
+	if err := s.eg.Wait(); err != nil {
+		return 0, 0, fmt.Errorf("同步异常: %w", err)
+	}
+	return
 }
 
 // InitSnapshot 扫描本地磁盘 初始化快照
@@ -108,40 +126,6 @@ func (s *Synchronizer) InitSnapshot() error {
 
 	s.snapshot = ss
 	return nil
-}
-
-// Sync 触发一次同步操作
-func (s *Synchronizer) Sync() (added, deleted int, err error) {
-	s.syncMu.Lock()
-	defer func() {
-		// 等待一个监听器轮询周期之后再释放锁
-		time.Sleep(WatcherInterval + time.Millisecond*100)
-		s.syncMu.Unlock()
-	}()
-
-	// 初始化状态
-	okTaskChan := make(chan FileTask, 1024)
-	s.eg, s.ctx = errgroup.WithContext(context.Background())
-
-	// 读取根目录放置到任务通道中
-	if err := s.walkDir2SyncTasks("/"); err != nil {
-		return 0, 0, fmt.Errorf("获取 openlist 根目录异常: %w", err)
-	}
-
-	// 执行同步任务
-	go s.handleSyncTasks(okTaskChan)
-
-	// 更新快照和目录树
-	s.eg.Go(func() error {
-		s.updateLocalTree(okTaskChan, &added, &deleted)
-		return nil
-	})
-
-	// 等待任务完成
-	if err := s.eg.Wait(); err != nil {
-		return 0, 0, fmt.Errorf("同步异常: %w", err)
-	}
-	return
 }
 
 // walkDir2SyncTasks 分页遍历 openlist 指定前缀目录下的文件, 加入到任务通道中
@@ -307,8 +291,6 @@ func (s *Synchronizer) updateLocalTree(okTaskChan <-chan FileTask, added, delete
 
 	maxCount := config.C.Openlist.LocalTreeGen.AutoRemoveMaxCount
 	if len(toDelete) > maxCount {
-		// 重新生成目录树快照
-		s.InitSnapshot()
 		logf(colors.Yellow, "过期文件数量 [%d] 超出最大限制 [%d], 跳过删除操作", len(toDelete), maxCount)
 		return
 	}
