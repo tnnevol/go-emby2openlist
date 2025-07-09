@@ -7,6 +7,9 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
+// WatcherInterval 本地目录树监控轮询间隔
+const WatcherInterval = time.Second
+
 // watchDirChange 监听目录变更, 触发回调函数
 func watchDirChange(dirPath string, handler func(e watcher.Event)) error {
 	w := watcher.New()
@@ -25,7 +28,7 @@ func watchDirChange(dirPath string, handler func(e watcher.Event)) error {
 		return fmt.Errorf("目录监听失败 [%s]: %w", dirPath, err)
 	}
 
-	if err := w.Start(time.Second); err != nil {
+	if err := w.Start(WatcherInterval); err != nil {
 		return fmt.Errorf("无法开启监听 [%s]: %w", dirPath, err)
 	}
 	return nil

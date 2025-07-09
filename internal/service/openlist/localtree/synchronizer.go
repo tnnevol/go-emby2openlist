@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
@@ -112,7 +113,11 @@ func (s *Synchronizer) InitSnapshot() error {
 // Sync 触发一次同步操作
 func (s *Synchronizer) Sync() (added, deleted int, err error) {
 	s.syncMu.Lock()
-	defer s.syncMu.Unlock()
+	defer func() {
+		// 等待一个监听器轮询周期之后再释放锁
+		time.Sleep(WatcherInterval + time.Millisecond*100)
+		s.syncMu.Unlock()
+	}()
 
 	// 初始化状态
 	okTaskChan := make(chan FileTask, 1024)
