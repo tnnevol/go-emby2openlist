@@ -372,7 +372,7 @@ docker-compose up -d --build
 
 2. 虚拟文件
 
-   此方式会在本地磁盘生成与远程文件**同名**的**空文件**（每个虚拟文件大小约 300B），对 Emby 来说就是大小为 0MB 的普通媒体文件。同理 strm，将目标文件容器配置到 `openlist.local-tree-gen.virtual-container` 属性中，以逗号分隔，不区分大小写，即可生效，示例配置：
+   此方式会在本地磁盘生成与远程文件**同名**的**空文件**（每个虚拟文件大小约 300B），对 Emby 来说就是大小为 0MB 的普通媒体文件。同理 Strm，将目标文件容器配置到 `openlist.local-tree-gen.virtual-container` 属性中，以逗号分隔，不区分大小写，即可生效，示例配置：
 
    ```yaml
    openlist:
@@ -436,7 +436,9 @@ docker-compose up -d --build
 | >> `auto-remove-max-count` | 此配置相当于为本地目录树加了个保险措施，防止 openlist 存储挂载出现异常后，程序误以为远程文件被删除，而将本地已扫描完成的目录树清空的情况。<br /><br />具体配置值需以自己 openlist 的总文件数为参考（可留意首次全量扫描目录树后的日志输出），建议配置为总文件数的 3/4 左右大小，当程序即将要删除的文件数目超过这个数值时，会停止删除操作，并在日志中输出警告 | 6000   |
 | >> `refresh-interval`      | 本地目录树刷新间隔，单位：分钟                               | 60     |
 
+### 额外说明
 
+为了保持 10MB 大小的精简 Docker 镜像，ffmpeg 默认不会被添加到镜像中。首次将 `openlist.local-tree-gen.ffmpeg-enable` 配置设置为 `true` 并运行容器后，程序会自动初始化 ffmpeg 环境，请耐心等待下载完成，中途不要停止容器
 
 ## 开发计划
 
