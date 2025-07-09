@@ -18,7 +18,7 @@ var (
 	trackReg    = regexp.MustCompile(`(?mi)track\s*:\s*(.+?)\s*$`)
 	genreReg    = regexp.MustCompile(`(?mi)genre\s*:\s*(.+?)\s*$`)
 	tdorReg     = regexp.MustCompile(`(?mi)tdor\s*:\s*(.+?)\s*$`)
-	lyricsReg   = regexp.MustCompile(`(?m):\s*(\[.*?\].*?)\s*$`)
+	lyricsReg   = regexp.MustCompile(`(?mi):\s*(\[.*?\].*?)\s*$`)
 )
 
 // resolveDuration 解析 ffmpeg 的 Duration 参数
@@ -50,7 +50,7 @@ func resolveLyrics(raw string) string {
 
 	sb := strings.Builder{}
 
-	results := lyricsReg.FindAllStringSubmatch(raw, -1)[1:]
+	results := lyricsReg.FindAllStringSubmatch(raw, -1)
 	for i, result := range results {
 		sb.WriteString(result[1])
 		if i < len(results)-1 {
@@ -80,14 +80,26 @@ func resolveTrack(raw string) int {
 
 // resolveTitle 解析 ffmpeg 的 title 参数
 func resolveTitle(raw string) string {
-	if titleTiReg.MatchString(raw) {
-		tiRes := titleTiReg.FindStringSubmatch(raw)[1]
-		if strings.TrimSpace(tiRes) != "" {
-			return tiRes
+	// 移除 Duration 字段之后的信息, 防止匹配到干扰字段
+	if durationReg.MatchString(raw) {
+		loc := durationReg.FindStringIndex(raw)
+		if len(loc) > 0 {
+			raw = raw[:loc[1]]
 		}
 	}
+
+	// 优先匹配 title
 	if titleReg.MatchString(raw) {
-		return titleReg.FindStringSubmatch(raw)[1]
+		res := strings.TrimSpace(titleReg.FindStringSubmatch(raw)[1])
+		if res != "" {
+			return res
+		}
 	}
+
+	// title 为空则空歌词中的 ti 属性提取
+	if titleTiReg.MatchString(raw) {
+		return strings.TrimSpace(titleTiReg.FindStringSubmatch(raw)[1])
+	}
+
 	return ""
 }

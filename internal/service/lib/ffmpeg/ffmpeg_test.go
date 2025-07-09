@@ -31,7 +31,7 @@ func TestInspectMusicFlac(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
-	rmt := host + "/d/%E9%9F%B3%E4%B9%901/%E9%99%8D%E5%A4%AE%E5%8D%93%E7%8E%9B/%E9%99%8D%E5%A4%AE%E5%8D%93%E7%8E%9B%20-%20%E8%93%9D%E8%89%B2%E7%9A%84%E8%92%99%E5%8F%A4%E9%AB%98%E5%8E%9F.flac?sign=xkDoQzXTqq8xXrQzi_BQpqMu0Crh-_gbBuzAvP83nVw=:0"
+	rmt := host + "/d/%E9%9F%B3%E4%B9%90/%E7%8E%8B%E6%A0%8E%E9%91%AB%20-%20%E5%93%A5%E5%93%A5.flac?sign=3zd3EpjDnt-2I_OmcxCxru0sNujyw7lfymgDUnKt9bU=:0"
 	meta, err := ffmpeg.InspectMusic(rmt)
 	if err != nil {
 		t.Fatal(err)
@@ -39,6 +39,7 @@ func TestInspectMusicFlac(t *testing.T) {
 	}
 	log.Println(meta)
 }
+
 func TestInspectMusicMP3(t *testing.T) {
 	if err := ffmpeg.AutoDownloadExec("../../../.."); err != nil {
 		t.Fatal(err)
