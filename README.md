@@ -357,7 +357,7 @@ docker-compose up -d --build
 
 1. 传统 Strm
 
-   将需要转换成 strm 文件的文件容器配置到 `openlist.local-tree-gen.strm-container` 属性中，以逗号分隔，不区分大小写，即可生效，示例配置：
+   将需要转换成 strm 文件的文件容器配置到 `openlist.local-tree-gen.strm-containers` 属性中，以逗号分隔，不区分大小写，即可生效，示例配置：
 
    ```yaml
    openlist:
@@ -372,7 +372,7 @@ docker-compose up -d --build
 
 2. 虚拟文件
 
-   此方式会在本地磁盘生成与远程文件**同名**的**空文件**（每个虚拟文件大小约 300B），对 Emby 来说就是大小为 0MB 的普通媒体文件。同理 Strm，将目标文件容器配置到 `openlist.local-tree-gen.virtual-container` 属性中，以逗号分隔，不区分大小写，即可生效，示例配置：
+   此方式会在本地磁盘生成与远程文件**同名**的**空文件**（每个虚拟文件大小约 300B），对 Emby 来说就是大小为 0MB 的普通媒体文件。同理 Strm，将目标文件容器配置到 `openlist.local-tree-gen.virtual-containers` 属性中，以逗号分隔，不区分大小写，即可生效，示例配置：
 
    ```yaml
    openlist:
@@ -413,7 +413,7 @@ docker-compose up -d --build
    >
    > 如果使用了此方式，但没有开启 ffmpeg，默认生成的是传统 Strm 文件
 
-   示例配置：
+   将目标文件容器配置到 `openlist.local-tree-gen.music-containers` 属性中，以逗号分隔，不区分大小写，即可生效，示例配置：
 
    ```yaml
    openlist:
