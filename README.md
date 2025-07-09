@@ -363,7 +363,7 @@ docker-compose up -d --build
    openlist:
      local-tree-gen:
        enable: true
-       strm-container: mp4,mkv,mp3,flac
+       strm-containers: mp4,mkv,mp3,flac
    ```
 
    **优点**：无需调用 ffmpeg，扫描速度极快，Emby 源端口 8096 也可能可以正常播放
@@ -378,7 +378,7 @@ docker-compose up -d --build
    openlist:
      local-tree-gen:
        enable: true
-       virtual-container: mp4,mkv
+       virtual-containers: mp4,mkv
    ```
 
    下面介绍虚拟文件的两种处理方式，各有优缺，自行斟酌选用：
@@ -396,7 +396,7 @@ docker-compose up -d --build
      local-tree-gen:
        enable: true
        ffmpeg-enable: true
-       virtual-container: mp4,mkv
+       virtual-containers: mp4,mkv
    ```
 
    使用这种方式后，程序会在扫描文件时，自动调用 ffmpeg 提取视频的真实时长，并写入本地虚拟文件中
@@ -420,7 +420,7 @@ docker-compose up -d --build
      local-tree-gen:
        enable: true
        ffmpeg-enable: true
-       music-container: mp3,flac
+       music-containers: mp3,flac
    ```
 
    **优点**：Emby 扫描音乐虚拟文件入库之后，能正常识别出音乐标签和时长
