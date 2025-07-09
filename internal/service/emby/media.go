@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -122,7 +123,7 @@ func getEmbyFileLocalPath(itemInfo ItemInfo) (string, error) {
 // findVideoPreviewInfos 查找 source 的所有转码资源
 //
 // 传递 resChan 进行异步查询, 通过监听 resChan 获取查询结果
-func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, resChan chan []*jsons.Item) {
+func findVideoPreviewInfos(source *jsons.Item, clientApiKey string, resChan chan []*jsons.Item) {
 	if resChan == nil {
 		return
 	}
@@ -188,6 +189,7 @@ func findVideoPreviewInfos(source *jsons.Item, originName, clientApiKey string, 
 	res := make([]*jsons.Item, len(transcodingList))
 	wg := sync.WaitGroup{}
 	itemId, _ := source.Attr("ItemId").String()
+	originName, _ := source.Attr("Name").String()
 	for idx, transcode := range transcodingList {
 		idx, transcode := idx, transcode
 		wg.Add(1)
@@ -298,30 +300,75 @@ func addSubtitles2MediaStreams(source *jsons.Item, subtitleList []openlist.Trans
 	}
 }
 
-// findMediaSourceName 查找 MediaSource 中的视频名称, 如 '1080p HEVC'
-func findMediaSourceName(source *jsons.Item) string {
+// tryGetVideoStreamInfo 尝试获取 MediaSource 中的视频流信息
+func tryGetVideoStreamInfo(source *jsons.Item) (*jsons.Item, bool) {
 	if source == nil || source.Type() != jsons.JsonTypeObj {
-		return ""
+		return nil, false
 	}
 
 	mediaStreams, ok := source.Attr("MediaStreams").Done()
 	if !ok || mediaStreams.Type() != jsons.JsonTypeArr {
-		return source.Attr("Name").Val().(string)
+		return nil, false
 	}
 
-	idx := mediaStreams.FindIdx(func(val *jsons.Item) bool {
-		return val.Attr("Type").Val() == "Video"
+	var res *jsons.Item
+	mediaStreams.RangeArr(func(_ int, value *jsons.Item) error {
+		if value.Attr("Type").Val() == "Video" {
+			res = value
+			return jsons.ErrBreakRange
+		}
+		return nil
 	})
-	if idx == -1 {
-		return source.Attr("Name").Val().(string)
+
+	if res == nil {
+		return nil, false
+	}
+	return res, true
+}
+
+// detectVirtualVideoDisplayTitle 检测虚拟视频媒体的显示名称
+func detectVirtualVideoDisplayTitle(source *jsons.Item) {
+	if source == nil || source.Type() != jsons.JsonTypeObj {
+		return
 	}
 
-	displayTitle, _ := mediaStreams.Idx(idx).Attr("DisplayTitle").String()
-	if strings.TrimSpace(displayTitle) == "" {
-		mediaStreams.Idx(idx).Attr("DisplayTitle").Set("Virtual")
+	vs, ok := tryGetVideoStreamInfo(source)
+	if !ok {
+		return
 	}
 
-	return displayTitle
+	displayTitle, _ := vs.Attr("DisplayTitle").String()
+	if displayTitle == "" {
+		vs.Put("DisplayTitle", jsons.FromValue("Virtual Media"))
+	}
+}
+
+// simplifyMediaName 简化 MediaSource 中的视频名称, 如 '1080p HEVC'
+func simplifyMediaName(source *jsons.Item) {
+	if source == nil || source.Type() != jsons.JsonTypeObj {
+		return
+	}
+
+	vs, ok := tryGetVideoStreamInfo(source)
+	if !ok {
+		return
+	}
+
+	displayTitle, _ := vs.Attr("DisplayTitle").String()
+	if displayTitle != "" {
+		source.Put("Name", jsons.FromValue(displayTitle))
+		return
+	}
+
+	originName, _ := source.Attr("Name").String()
+	reg := regexp.MustCompile(`(?i)S\d+(E\d+)?`)
+	if reg.MatchString(originName) {
+		loc := reg.FindStringIndex(originName)
+		if len(loc) > 0 {
+			newName := originName[loc[0]:]
+			source.Put("Name", jsons.FromValue(newName))
+		}
+	}
 }
 
 // resolveItemInfo 解析 emby 资源 item 信息
