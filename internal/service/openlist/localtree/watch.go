@@ -8,7 +8,7 @@ import (
 )
 
 // WatcherInterval 本地目录树监控轮询间隔
-const WatcherInterval = time.Second
+const WatcherInterval = time.Second * 5
 
 // watchDirChange 监听目录变更, 触发回调函数
 func watchDirChange(dirPath string, handler func(e watcher.Event)) error {
@@ -16,7 +16,7 @@ func watchDirChange(dirPath string, handler func(e watcher.Event)) error {
 
 	w.SetMaxEvents(1)
 	w.IgnoreHiddenFiles(true)
-	w.FilterOps(watcher.Create, watcher.Remove, watcher.Rename, watcher.Write, watcher.Move)
+	w.FilterOps(watcher.Remove)
 
 	go func() {
 		for e := range w.Event {
