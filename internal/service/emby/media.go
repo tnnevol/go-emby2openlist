@@ -315,7 +315,13 @@ func findMediaSourceName(source *jsons.Item) string {
 	if idx == -1 {
 		return source.Attr("Name").Val().(string)
 	}
-	return mediaStreams.Ti().Idx(idx).Attr("DisplayTitle").Val().(string)
+
+	displayTitle, _ := mediaStreams.Idx(idx).Attr("DisplayTitle").String()
+	if strings.TrimSpace(displayTitle) == "" {
+		mediaStreams.Idx(idx).Attr("DisplayTitle").Set("Virtual")
+	}
+
+	return displayTitle
 }
 
 // resolveItemInfo 解析 emby 资源 item 信息
