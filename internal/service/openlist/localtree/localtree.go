@@ -22,7 +22,7 @@ func Init() error {
 
 	dirAbs := filepath.Join(config.BasePath, DirName)
 
-	s := NewSynchronizer(dirAbs, 20)
+	s := NewSynchronizer(dirAbs, 30)
 	go startSync(s)
 
 	return nil

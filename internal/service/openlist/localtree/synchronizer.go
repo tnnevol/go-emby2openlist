@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
+	"sync/atomic"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
@@ -35,6 +35,9 @@ type Synchronizer struct {
 
 	// toSyncTasks 每次同步时的待处理子任务存放通道
 	toSyncTasks chan []FileTask
+
+	// activeTaskCount 记录 BFS 遍历过程中的活跃任务数
+	activeTaskCount int32
 }
 
 // NewSynchronizer 指定目录树根路径 初始化一个同步器
@@ -42,7 +45,7 @@ func NewSynchronizer(baseDir string, pageSize int) *Synchronizer {
 	return &Synchronizer{
 		baseDir:     baseDir,
 		pageSize:    pageSize,
-		toSyncTasks: make(chan []FileTask, 1024),
+		toSyncTasks: make(chan []FileTask, 4096),
 	}
 }
 
@@ -57,6 +60,7 @@ func (s *Synchronizer) Sync() (added, deleted int, err error) {
 	s.eg, s.ctx = errgroup.WithContext(context.Background())
 
 	// 读取根目录放置到任务通道中
+	s.activeTaskCount = 0
 	if err := s.walkDir2SyncTasks("/"); err != nil {
 		return 0, 0, fmt.Errorf("获取 openlist 根目录异常: %w", err)
 	}
@@ -140,6 +144,7 @@ func (s *Synchronizer) walkDir2SyncTasks(prefix string) error {
 			taskList[i] = FsGetTask(prefix, info)
 		}
 		s.toSyncTasks <- taskList
+		atomic.AddInt32(&s.activeTaskCount, 1)
 		page, err = walker.Next()
 	}
 	if err != openlist.ErrWalkEOF {
@@ -231,18 +236,15 @@ func (s *Synchronizer) handleSyncTasks(okTaskChan chan<- FileTask) {
 	}
 
 	// BFS
-	wg := sync.WaitGroup{}
-	for len(s.toSyncTasks) > 0 {
-		num := len(s.toSyncTasks)
-		for range num {
-			tasks := <-s.toSyncTasks
-			wg.Add(1)
-			s.eg.Go(func() error {
-				defer wg.Done()
-				return handleTasks(tasks)
-			})
-		}
-		wg.Wait()
+	for tasks := range s.toSyncTasks {
+		s.eg.Go(func() error {
+			defer func() {
+				if atomic.AddInt32(&s.activeTaskCount, -1) == 0 {
+					close(s.toSyncTasks)
+				}
+			}()
+			return handleTasks(tasks)
+		})
 	}
 
 	close(okTaskChan)
