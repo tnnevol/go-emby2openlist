@@ -107,6 +107,6 @@ func ProxyPass(r *http.Request, w http.ResponseWriter, remote string) error {
 	CloneHeader(w, resp.Header)
 
 	// 3 回写响应体
-	_, err = io.Copy(w, resp.Body)
+	io.Copy(w, resp.Body)
 	return err
 }
