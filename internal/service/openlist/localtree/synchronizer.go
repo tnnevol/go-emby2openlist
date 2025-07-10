@@ -45,7 +45,7 @@ func NewSynchronizer(baseDir string, pageSize int) *Synchronizer {
 	return &Synchronizer{
 		baseDir:     baseDir,
 		pageSize:    pageSize,
-		toSyncTasks: make(chan []FileTask, 4096),
+		toSyncTasks: make(chan []FileTask, 1024),
 	}
 }
 
@@ -56,6 +56,7 @@ func (s *Synchronizer) Sync() (added, deleted int, err error) {
 	}
 
 	// 初始化状态
+	s.toSyncTasks = make(chan []FileTask, 1024)
 	okTaskChan := make(chan FileTask, 1024)
 	s.eg, s.ctx = errgroup.WithContext(context.Background())
 
