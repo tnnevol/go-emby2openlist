@@ -50,9 +50,9 @@ func NewSynchronizer(baseDir string, pageSize int) *Synchronizer {
 }
 
 // Sync 触发一次同步操作
-func (s *Synchronizer) Sync() (added, deleted int, err error) {
+func (s *Synchronizer) Sync() (total, added, deleted int, err error) {
 	if err := s.InitSnapshot(); err != nil {
-		return 0, 0, fmt.Errorf("初始化快照异常: %w", err)
+		return 0, 0, 0, fmt.Errorf("初始化快照异常: %w", err)
 	}
 
 	// 初始化状态
@@ -63,7 +63,7 @@ func (s *Synchronizer) Sync() (added, deleted int, err error) {
 	// 读取根目录放置到任务通道中
 	s.activeTaskCount = 0
 	if err := s.walkDir2SyncTasks("/"); err != nil {
-		return 0, 0, fmt.Errorf("获取 openlist 根目录异常: %w", err)
+		return 0, 0, 0, fmt.Errorf("获取 openlist 根目录异常: %w", err)
 	}
 
 	// 执行同步任务
@@ -71,13 +71,13 @@ func (s *Synchronizer) Sync() (added, deleted int, err error) {
 
 	// 更新快照和目录树
 	s.eg.Go(func() error {
-		s.updateLocalTree(okTaskChan, &added, &deleted)
+		s.updateLocalTree(okTaskChan, &total, &added, &deleted)
 		return nil
 	})
 
 	// 等待任务完成
 	if err := s.eg.Wait(); err != nil {
-		return 0, 0, fmt.Errorf("同步异常: %w", err)
+		return 0, 0, 0, fmt.Errorf("同步异常: %w", err)
 	}
 	return
 }
@@ -252,7 +252,7 @@ func (s *Synchronizer) handleSyncTasks(okTaskChan chan<- FileTask) {
 }
 
 // updateLocalTree 监听 okTaskChan 生成新快照, 并移除本地磁盘中的过期文件, 同时统计变更数
-func (s *Synchronizer) updateLocalTree(okTaskChan <-chan FileTask, added, deleted *int) {
+func (s *Synchronizer) updateLocalTree(okTaskChan <-chan FileTask, total, added, deleted *int) {
 	if okTaskChan == nil ||
 		added == nil ||
 		deleted == nil ||
@@ -261,7 +261,7 @@ func (s *Synchronizer) updateLocalTree(okTaskChan <-chan FileTask, added, delete
 		return
 	}
 	current := NewSnapshot()
-	*added, *deleted = 0, 0
+	*added, *deleted, *total = 0, 0, 0
 
 	// 循环处理任务
 	chanOpen := true
@@ -275,6 +275,7 @@ func (s *Synchronizer) updateLocalTree(okTaskChan <-chan FileTask, added, delete
 				break
 			}
 			current.Put(task.LocalPath, task.IsDir)
+			*total++
 			// 判断是否是新增
 			if _, exists := s.snapshot.Check(task.LocalPath); !exists {
 				*added++

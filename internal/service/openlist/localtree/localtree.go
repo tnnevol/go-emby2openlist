@@ -33,12 +33,12 @@ func startSync(s *Synchronizer) {
 	doSync := func() {
 		logf(colors.Blue, "开始同步")
 		start := time.Now()
-		added, deleted, err := s.Sync()
+		total, added, deleted, err := s.Sync()
 		if err != nil {
 			logf(colors.Red, "同步失败: %v", err)
 			return
 		}
-		logf(colors.Green, "同步完成, 新增: %d, 删除: %d, 耗时: %v", added, deleted, time.Since(start))
+		logf(colors.Green, "同步完成, 总数: %d, 新增: %d, 删除: %d, 耗时: %v", total, added, deleted, time.Since(start))
 	}
 	doSync()
 
