@@ -2,10 +2,9 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 )
 
 type Path struct {
@@ -33,7 +32,7 @@ func (p *Path) MapEmby2Openlist(embyPath string) (string, bool) {
 	for _, cfg := range p.emby2OpenlistArr {
 		ep, ap := cfg[0], cfg[1]
 		if strings.HasPrefix(embyPath, ep) {
-			log.Printf(colors.ToGray("命中 emby2openlist 路径映射: %s => %s (如命中错误, 请将正确的映射配置前移)"), ep, ap)
+			logs.Tip("命中 emby2openlist 路径映射: %s => %s (如命中错误, 请将正确的映射配置前移)", ep, ap)
 			return strings.Replace(embyPath, ep, ap, 1), true
 		}
 	}

@@ -7,7 +7,7 @@ import (
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/emby"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/web/cache"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/web/webport"
 
@@ -60,7 +60,7 @@ func listenHTTP(errChan chan error) {
 		c.Set(webport.GinKey, webport.HTTP)
 	})
 	initRouter(r)
-	log.Printf(colors.ToBlue("在端口【%s】上启动 HTTP 服务"), webport.HTTP)
+	logs.Info("在端口【%s】上启动 HTTP 服务", webport.HTTP)
 	err := r.Run("0.0.0.0:" + webport.HTTP)
 	errChan <- err
 	close(errChan)
@@ -77,7 +77,7 @@ func listenHTTPS(errChan chan error) {
 		c.Set(webport.GinKey, webport.HTTPS)
 	})
 	initRouter(r)
-	log.Printf(colors.ToBlue("在端口【%s】上启动 HTTPS 服务"), webport.HTTPS)
+	logs.Info("在端口【%s】上启动 HTTPS 服务", webport.HTTPS)
 	ssl := config.C.Ssl
 
 	srv := &http.Server{

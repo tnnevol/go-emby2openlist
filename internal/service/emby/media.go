@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -19,6 +18,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/path"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/randoms"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
@@ -166,7 +166,7 @@ func findVideoPreviewInfos(source *jsons.Item, clientApiKey string, resChan chan
 	if !firstFetchSuccess {
 		paths, err := openlistPathRes.Range()
 		if err != nil {
-			log.Printf("转换 openlist 路径异常: %v", err)
+			logs.Error("转换 openlist 路径异常: %v", err)
 			resChan <- nil
 			return
 		}

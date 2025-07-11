@@ -1,36 +1,37 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/constant"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist/localtree"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/web"
 )
 
 func main() {
-	log.Println("正在加载配置...")
 	if err := config.ReadFromFile("config.yml"); err != nil {
 		log.Fatal(err)
 	}
 
 	printBanner()
 
-	log.Println(colors.ToBlue("正在初始化本地目录树模块..."))
+	logs.Info("正在初始化本地目录树模块...")
 	if err := localtree.Init(); err != nil {
 		log.Fatal(colors.ToRed(err.Error()))
 	}
 
-	log.Println(colors.ToBlue("正在启动服务..."))
+	logs.Info("正在启动服务...")
 	if err := web.Listen(); err != nil {
 		log.Fatal(colors.ToRed(err.Error()))
 	}
 }
 
 func printBanner() {
-	log.Printf(colors.ToYellow(`
+	fmt.Printf(colors.ToYellow(`
                                  _           ___                        _ _     _   
                                 | |         |__ \                      | (_)   | |  
   __ _  ___ ______ ___ _ __ ___ | |__  _   _   ) |___  _ __   ___ _ __ | |_ ___| |_ 
@@ -42,5 +43,5 @@ func printBanner() {
 
  Repository: %s
     Version: %s
-	`), constant.RepoAddr, constant.CurrentVersion)
+`), constant.RepoAddr, constant.CurrentVersion)
 }

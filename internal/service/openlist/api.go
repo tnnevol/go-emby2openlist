@@ -4,16 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"reflect"
 	"strings"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/model"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 )
 
@@ -38,7 +37,7 @@ func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
 		if !fi.TryRawIfTranscodeFail {
 			return model.HttpRes[Resource]{Code: originRes.Code, Msg: originRes.Msg}
 		}
-		log.Printf(colors.ToRed("请求转码资源失败, 尝试请求原画资源, 原始响应: %v"), jsons.FromObject(originRes))
+		logs.Error("请求转码资源失败, 尝试请求原画资源, 原始响应: %v", jsons.FromObject(originRes))
 		fi.UseTranscode = false
 		return FetchResource(fi)
 	}
@@ -64,7 +63,7 @@ func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
 		}
 	}
 	if idx == -1 {
-		log.Printf(colors.ToRed("查找不到指定的格式: %s, 所有可用的格式: [%s]"), fi.Format, strings.Join(allFmts, ", "))
+		logs.Error("查找不到指定的格式: %s, 所有可用的格式: [%s]", fi.Format, strings.Join(allFmts, ", "))
 		return failedAndTryRaw(res)
 	}
 

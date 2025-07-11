@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs/colors"
 )
 
 // DirName 存放目录树的本地目录名称

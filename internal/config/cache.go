@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"time"
 )
@@ -43,10 +42,6 @@ func (c *Cache) Init() error {
 			return fmt.Errorf("cache.exipred 配置错误: %d, 值需大于 0", base)
 		}
 		c.expired = time.Duration(base) * duration
-	}
-
-	if c.Enable {
-		log.Println("缓存中间件已启用, 过期时间: ", c.Expired)
 	}
 
 	return nil

@@ -1,11 +1,11 @@
 package web
 
 import (
-	"log"
 	"net/http"
 	"regexp"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/constant"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/gin-gonic/gin"
 )
 
@@ -37,14 +37,14 @@ func compileRules(rs [][2]any) [][2]any {
 	for _, rule := range rs {
 		reg, err := regexp.Compile(rule[0].(string))
 		if err != nil {
-			log.Printf("路由正则编译失败, pattern: %v, error: %v", rule[0], err)
+			logs.Error("路由正则编译失败, pattern: %v, error: %v", rule[0], err)
 			continue
 		}
 		rule[0] = reg
 
 		rawHandler, ok := rule[1].(func(*gin.Context))
 		if !ok {
-			log.Printf("错误的请求处理器, pattern: %v", rule[0])
+			logs.Error("错误的请求处理器, pattern: %v", rule[0])
 			continue
 		}
 		var handler gin.HandlerFunc = rawHandler

@@ -3,7 +3,6 @@ package emby
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"slices"
@@ -13,8 +12,8 @@ import (
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/path"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/web/cache"
@@ -32,7 +31,6 @@ func Redirect2Transcode(c *gin.Context) {
 		ProxyOrigin(c)
 		return
 	}
-	log.Println(colors.ToBlue("检测到自定义的转码 m3u8 请求, 重定向到本地代理接口"))
 	tu, _ := url.Parse("/videos/proxy_playlist")
 	q := tu.Query()
 	q.Set("openlist_path", openlistPath)
@@ -49,7 +47,7 @@ func Redirect2OpenlistLink(c *gin.Context) {
 	if checkErr(c, err) {
 		return
 	}
-	log.Printf(colors.ToBlue("解析到的 itemInfo: %v"), itemInfo)
+	logs.Info("解析到的 itemInfo: %v", itemInfo)
 
 	// 2 如果请求的是转码资源, 重定向到本地的 m3u8 代理服务
 	msInfo := itemInfo.MsInfo
@@ -61,7 +59,7 @@ func Redirect2OpenlistLink(c *gin.Context) {
 		q.Set(QueryApiKeyName, itemInfo.ApiKey)
 		q.Set("openlist_path", itemInfo.MsInfo.OpenlistPath)
 		u.RawQuery = q.Encode()
-		log.Printf(colors.ToGreen("重定向 playlist: %s"), u.String())
+		logs.Success("重定向 playlist: %s", u.String())
 		c.Redirect(http.StatusTemporaryRedirect, u.String())
 		return
 	}
@@ -76,7 +74,7 @@ func Redirect2OpenlistLink(c *gin.Context) {
 	if urls.IsRemote(embyPath) {
 		finalPath := config.C.Emby.Strm.MapPath(embyPath)
 		finalPath = getFinalRedirectLink(finalPath, c.Request.Header.Clone())
-		log.Printf(colors.ToGreen("重定向 strm: %s"), finalPath)
+		logs.Success("重定向 strm: %s", finalPath)
 		c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
 		c.Redirect(http.StatusTemporaryRedirect, finalPath)
 		return
@@ -84,7 +82,7 @@ func Redirect2OpenlistLink(c *gin.Context) {
 
 	// 5 如果是本地地址, 回源处理
 	if strings.HasPrefix(embyPath, config.C.Emby.LocalMediaRoot) {
-		log.Printf(colors.ToBlue("本地媒体: %s, 回源处理"), embyPath)
+		logs.Info("本地媒体: %s, 回源处理", embyPath)
 		ProxyOrigin(c)
 		return
 	}
@@ -100,7 +98,7 @@ func Redirect2OpenlistLink(c *gin.Context) {
 	allErrors := strings.Builder{}
 	// handleOpenlistResource 根据传递的 path 请求 openlist 资源
 	handleOpenlistResource := func(path string) bool {
-		log.Printf(colors.ToBlue("尝试请求 Openlist 资源: %s"), path)
+		logs.Info("尝试请求 Openlist 资源: %s", path)
 		fi.Path = path
 		res := openlist.FetchResource(fi)
 
@@ -111,7 +109,7 @@ func Redirect2OpenlistLink(c *gin.Context) {
 
 		// 处理直链
 		if !fi.UseTranscode {
-			log.Printf(colors.ToGreen("请求成功, 重定向到: %s"), res.Data.Url)
+			logs.Success("请求成功, 重定向到: %s", res.Data.Url)
 			c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
 			c.Redirect(http.StatusTemporaryRedirect, res.Data.Url)
 			return true
@@ -166,12 +164,12 @@ func checkErr(c *gin.Context, err error) bool {
 
 	// 采用拒绝策略, 直接返回错误
 	if config.C.Emby.ProxyErrorStrategy == config.PeStrategyReject {
-		log.Printf(colors.ToRed("代理接口失败: %v"), err)
+		logs.Error("代理接口失败: %v", err)
 		c.String(http.StatusInternalServerError, "代理接口失败, 请检查日志")
 		return true
 	}
 
-	log.Printf(colors.ToRed("代理接口失败: %v, 回源处理"), err)
+	logs.Error("代理接口失败: %v, 回源处理", err)
 	ProxyOrigin(c)
 	return true
 }
@@ -182,7 +180,7 @@ func checkErr(c *gin.Context, err error) bool {
 func getFinalRedirectLink(originLink string, header http.Header) string {
 	finalLink, resp, err := https.Get(originLink).Header(header).DoRedirect()
 	if err != nil {
-		log.Printf(colors.ToYellow("内部重定向失败: %v"), err)
+		logs.Warn("内部重定向失败: %v", err)
 		return originLink
 	}
 	defer resp.Body.Close()

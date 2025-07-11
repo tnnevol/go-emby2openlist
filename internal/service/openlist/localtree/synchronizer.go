@@ -10,8 +10,8 @@ import (
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/files"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 	"golang.org/x/sync/errgroup"
 )

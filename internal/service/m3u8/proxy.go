@@ -3,13 +3,12 @@ package m3u8
 import (
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 
 	"github.com/gin-gonic/gin"
@@ -39,7 +38,7 @@ func baseCheck(c *gin.Context) (ProxyParams, error) {
 func ProxyPlaylist(c *gin.Context) {
 	params, err := baseCheck(c)
 	if err != nil {
-		log.Printf(colors.ToRed("代理 m3u8 失败: %v"), err.Error())
+		logs.Error("代理 m3u8 失败: %v", err.Error())
 		c.String(http.StatusBadRequest, "代理 m3u8 失败, 请检查日志")
 		return
 	}
@@ -72,7 +71,7 @@ func ProxyPlaylist(c *gin.Context) {
 func ProxyTsLink(c *gin.Context) {
 	params, err := baseCheck(c)
 	if err != nil {
-		log.Printf(colors.ToRed("代理 ts 失败: %v"), err)
+		logs.Error("代理 ts 失败: %v", err)
 		c.String(http.StatusBadRequest, "代理 ts 失败, 请检查日志")
 		return
 	}
@@ -84,7 +83,7 @@ func ProxyTsLink(c *gin.Context) {
 	}
 
 	okRedirect := func(link string) {
-		log.Printf(colors.ToGreen("重定向 ts: %s"), link)
+		logs.Success("重定向 ts: %s", link)
 		c.Redirect(http.StatusTemporaryRedirect, link)
 	}
 
@@ -109,7 +108,7 @@ func ProxyTsLink(c *gin.Context) {
 func ProxySubtitle(c *gin.Context) {
 	params, err := baseCheck(c)
 	if err != nil {
-		log.Printf(colors.ToRed("代理字幕失败: %v"), err)
+		logs.Error("代理字幕失败: %v", err)
 		c.String(http.StatusBadRequest, "代理字幕失败, 请检查日志")
 		return
 	}
@@ -121,10 +120,10 @@ func ProxySubtitle(c *gin.Context) {
 	}
 
 	proxySubtitle := func(link string) {
-		log.Printf(colors.ToGreen("代理字幕: %s"), link)
+		logs.Info("代理字幕: %s", link)
 		resp, err := https.Get(link).Do()
 		if err != nil {
-			log.Printf(colors.ToRed("代理字幕失败: %v"), err)
+			logs.Error("代理字幕失败: %v", err)
 			c.String(http.StatusInternalServerError, "代理字幕失败, 请检查日志")
 			return
 		}
@@ -132,7 +131,7 @@ func ProxySubtitle(c *gin.Context) {
 		https.CloneHeader(c.Writer, resp.Header)
 		c.Status(resp.StatusCode)
 		if _, err = io.Copy(c.Writer, resp.Body); err != nil {
-			log.Printf(colors.ToRed("代理字幕失败: %v"), err)
+			logs.Error("代理字幕失败: %v", err)
 			c.String(http.StatusInternalServerError, "代理字幕失败, 请检查日志")
 			return
 		}

@@ -3,7 +3,6 @@ package emby
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -11,9 +10,9 @@ import (
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/constant"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,7 +23,7 @@ func HandleSyncDownload(c *gin.Context) {
 	if checkErr(c, err) {
 		return
 	}
-	log.Printf(colors.ToBlue("解析出来的 itemInfo 信息: %v"), itemInfo)
+	logs.Info("解析出来的 itemInfo 信息: %v", itemInfo)
 	if itemInfo.Id == "" {
 		checkErr(c, errors.New("JobItems id 为空"))
 		return
@@ -87,7 +86,7 @@ func HandleSyncDownload(c *gin.Context) {
 				breakRange = true
 				return jsons.ErrBreakRange
 			}
-			log.Printf(colors.ToGreen("成功匹配到 itemId: %s, mediaSourceId: %s"), itemId, msId)
+			logs.Success("成功匹配到 itemId: %s, mediaSourceId: %s", itemId, msId)
 
 			newUrl, _ := url.Parse(fmt.Sprintf("/videos/%s/stream?MediaSourceId=%s&api_key=%s&Static=true", itemId, msId, itemInfo.ApiKey))
 			c.Redirect(http.StatusTemporaryRedirect, newUrl.String())
@@ -139,7 +138,7 @@ func DownloadStrategyChecker() gin.HandlerFunc {
 
 		if strategy == config.DlStrategyOrigin {
 			if err := https.ProxyPass(c.Request, c.Writer, config.C.Emby.Host); err != nil {
-				log.Printf(colors.ToRed("下载接口代理失败: %v"), err)
+				logs.Error("下载接口代理失败: %v", err)
 			}
 		}
 

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -14,8 +13,8 @@ import (
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/emby"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 )
@@ -216,7 +215,7 @@ func (i *Info) UpdateContent() error {
 	if i.OpenlistPath == "" || i.TemplateId == "" {
 		return errors.New("参数为设置, 无法更新")
 	}
-	log.Printf(colors.ToPurple("更新 playlist, openlistPath: %s, templateId: %s"), i.OpenlistPath, i.TemplateId)
+	logs.Progress("更新 playlist, openlistPath: %s, templateId: %s", i.OpenlistPath, i.TemplateId)
 
 	// 请求 openlist 资源
 	res := openlist.FetchResource(openlist.FetchInfo{
