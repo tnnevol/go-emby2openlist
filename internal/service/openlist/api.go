@@ -89,6 +89,9 @@ func FetchFsList(path string, header http.Header) model.HttpRes[FsList] {
 		return model.HttpRes[FsList]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 
+	walkWaiter.Add(1)
+	defer walkWaiter.Done()
+
 	var res FsList
 	err := Fetch("/api/fs/list", http.MethodPost, header, map[string]any{
 		"refresh":  false,
@@ -109,6 +112,9 @@ func FetchFsGet(path string, header http.Header) model.HttpRes[FsGet] {
 		return model.HttpRes[FsGet]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
 
+	walkWaiter.Add(1)
+	defer walkWaiter.Done()
+
 	var res FsGet
 	err := Fetch("/api/fs/get", http.MethodPost, header, map[string]any{
 		"refresh":  false,
@@ -128,6 +134,9 @@ func FetchFsOther(path string, header http.Header) model.HttpRes[FsOther] {
 	if strs.AnyEmpty(path) {
 		return model.HttpRes[FsOther]{Code: http.StatusBadRequest, Msg: "参数 path 不能为空"}
 	}
+
+	walkWaiter.Add(1)
+	defer walkWaiter.Done()
 
 	var res FsOther
 	err := Fetch("/api/fs/other", http.MethodPost, header, map[string]any{

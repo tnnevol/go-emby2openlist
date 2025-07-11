@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
 )
 
 // ErrWalkEOF 标记分页遍历结束
@@ -19,6 +20,9 @@ type Walker[T any] struct {
 	Next func() (T, error)
 }
 
+// walkWaiter 用于当客户端需要请求 openlist 时, 暂时阻塞所有 walk 操作
+var walkWaiter = sync.WaitGroup{}
+
 // FetchFsList 请求 openlist "/api/fs/list" 接口, 支持分页
 //
 // 传入 path 与接口的 path 作用一致
@@ -29,6 +33,7 @@ func WalkFsList(path string, perPage int) *Walker[FsList] {
 		if w.curPage < 1 {
 			return FsList{}, ErrWalkEOF
 		}
+		walkWaiter.Wait()
 
 		var res FsList
 		err := Fetch("/api/fs/list", http.MethodPost, nil, map[string]any{
