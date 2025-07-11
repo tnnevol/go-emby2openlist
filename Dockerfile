@@ -14,7 +14,10 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # 复制源码
-COPY . .
+COPY cmd cmd
+COPY internal internal
+COPY pkg pkg
+COPY main.go main.go
 
 # 编译源码成静态链接的二进制文件
 RUN CGO_ENABLED=0 go build -a -installsuffix cgo -o main .
