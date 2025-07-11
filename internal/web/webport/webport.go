@@ -1,7 +1,10 @@
 package webport
 
+var (
+	HTTPS = "8094"
+	HTTP  = "8095"
+)
+
 const (
-	HTTPS  = "8094"
-	HTTP   = "8095"
 	GinKey = "port"
 )

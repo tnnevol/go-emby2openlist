@@ -1,8 +1,11 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
+	"os"
+	"strconv"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/constant"
@@ -10,9 +13,13 @@ import (
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/web"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/web/webport"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	parseFlag()
+
 	if err := config.ReadFromFile("config.yml"); err != nil {
 		log.Fatal(err)
 	}
@@ -28,6 +35,30 @@ func main() {
 	if err := web.Listen(); err != nil {
 		log.Fatal(colors.ToRed(err.Error()))
 	}
+}
+
+// parseFlag 转换命令行参数
+func parseFlag() {
+	ph := flag.Int("port-http", 8095, "HTTP 服务监听端口")
+	phs := flag.Int("port-https", 8094, "HTTPS 服务监听端口")
+	printVersion := flag.Bool("version", false, "查看程序版本")
+	prod := flag.Bool("prod", false, "是否以生产环境运行")
+	flag.Parse()
+
+	if *printVersion {
+		fmt.Println(constant.CurrentVersion)
+		os.Exit(0)
+	}
+
+	if *prod {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	if *ph == *phs {
+		log.Fatal("HTTP 和 HTTPS 端口冲突")
+	}
+	webport.HTTP = strconv.Itoa(*ph)
+	webport.HTTPS = strconv.Itoa(*phs)
 }
 
 func printBanner() {
