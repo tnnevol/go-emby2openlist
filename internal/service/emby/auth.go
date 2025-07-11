@@ -2,7 +2,6 @@ package emby
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -10,8 +9,8 @@ import (
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/constant"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 
@@ -97,14 +96,14 @@ func ApiKeyChecker() gin.HandlerFunc {
 		}
 		resp, err := https.Get(u).Header(header).Do()
 		if err != nil {
-			log.Printf(colors.ToRed("鉴权失败: %v"), err)
+			logs.Error("鉴权失败: %v", err)
 			c.Abort()
 			return
 		}
 		defer resp.Body.Close()
 		bodyBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
-			log.Printf(colors.ToRed("鉴权中间件读取源服务器响应失败: %v"), err)
+			logs.Error("鉴权中间件读取源服务器响应失败: %v", err)
 			bodyBytes = []byte(UnauthorizedResp)
 		}
 		respBody := strings.TrimSpace(string(bodyBytes))

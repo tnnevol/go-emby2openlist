@@ -3,7 +3,6 @@ package emby
 import (
 	"bytes"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -12,9 +11,9 @@ import (
 	"sync"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -69,7 +68,7 @@ func ProxyOrigin(c *gin.Context) {
 	c.Request.Header.Set("X-Real-IP", c.ClientIP())
 
 	if err := https.ProxyPass(c.Request, c.Writer, origin); err != nil {
-		log.Printf(colors.ToRed("代理异常: %v"), err)
+		logs.Error("代理异常: %v", err)
 	}
 }
 
@@ -112,7 +111,7 @@ func TestProxyUri(c *gin.Context) bool {
 
 	bodyBytes, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		log.Printf(colors.ToRed("测试 uri 执行异常: %v"), err)
+		logs.Error("测试 uri 执行异常: %v", err)
 		return false
 	}
 	infos.Body = string(bodyBytes)
@@ -123,7 +122,7 @@ func TestProxyUri(c *gin.Context) bool {
 		Body(io.NopCloser(bytes.NewBuffer(bodyBytes))).
 		Do()
 	if err != nil {
-		log.Printf(colors.ToRed("测试 uri 执行异常: %v"), err)
+		logs.Error("测试 uri 执行异常: %v", err)
 		return false
 	}
 	defer resp.Body.Close()
@@ -137,12 +136,12 @@ func TestProxyUri(c *gin.Context) bool {
 
 	bodyBytes, err = io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf(colors.ToRed("测试 uri 执行异常: %v"), err)
+		logs.Error("测试 uri 执行异常: %v", err)
 		return false
 	}
 	infos.RespBody = string(bodyBytes)
 	infos.RespStatus = resp.StatusCode
-	log.Printf(colors.ToYellow("测试 uri 代理信息: %s"), jsons.FromValue(infos))
+	logs.Warn("测试 uri 代理信息: %s", jsons.FromValue(infos))
 
 	c.Status(infos.RespStatus)
 	c.Writer.Write(bodyBytes)

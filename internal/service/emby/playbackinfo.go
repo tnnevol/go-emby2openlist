@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -14,9 +13,9 @@ import (
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/web/cache"
 
@@ -48,7 +47,7 @@ var (
 func TransferPlaybackInfo(c *gin.Context) {
 	// 1 解析资源信息
 	itemInfo, err := resolveItemInfo(c, RoutePlaybackInfo)
-	log.Printf(colors.ToBlue("ItemInfo 解析结果: %s"), itemInfo)
+	logs.Info("ItemInfo 解析结果: %s", itemInfo)
 	if checkErr(c, err) {
 		return
 	}
@@ -85,12 +84,10 @@ func TransferPlaybackInfo(c *gin.Context) {
 	}
 
 	if mediaSources.Empty() {
-		log.Println(colors.ToYellow("没有找到可播放的资源"))
 		jsons.OkResp(c.Writer, resJson)
 		return
 	}
 
-	log.Printf(colors.ToBlue("获取到的 MediaSources 个数: %d"), mediaSources.Len())
 	var haveReturned = errors.New("have returned")
 	resChans := make([]chan []*jsons.Item, 0)
 	err = mediaSources.RangeArr(func(_ int, source *jsons.Item) error {
@@ -126,7 +123,6 @@ func TransferPlaybackInfo(c *gin.Context) {
 			itemInfo.Id, source.Attr("Id").Val(), itemInfo.ApiKeyName, itemInfo.ApiKey,
 		)
 		source.Put("DirectStreamUrl", jsons.FromValue(newUrl))
-		log.Printf(colors.ToBlue("设置直链播放链接为: %s"), newUrl)
 
 		// path 解码
 		if path, ok := source.Attr("Path").String(); ok {
@@ -137,7 +133,6 @@ func TransferPlaybackInfo(c *gin.Context) {
 		source.DelKey("TranscodingUrl")
 		source.DelKey("TranscodingSubProtocol")
 		source.DelKey("TranscodingContainer")
-		log.Println(colors.ToBlue("转码配置被移除"))
 
 		// 如果是远程资源, 不获取转码地址
 		ir, _ := source.Attr("IsRemote").Bool()
@@ -172,7 +167,6 @@ func TransferPlaybackInfo(c *gin.Context) {
 	for _, resChan := range resChans {
 		previewInfos := <-resChan
 		if len(previewInfos) > 0 {
-			log.Printf(colors.ToGreen("找到 %d 个转码资源信息"), len(previewInfos))
 			mediaSources.Append(previewInfos...)
 		}
 	}
@@ -292,7 +286,6 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 		newHeader := spaceCache.Headers()
 		newHeader.Set("Content-Length", strconv.Itoa(len(newBody)))
 		spaceCache.Update(0, newBody, newHeader)
-		log.Printf(colors.ToPurple("刷新缓存空间 PlaybackInfo 信息, space: %s, spaceKey: %s"), spaceCache.Space(), spaceCache.SpaceKey())
 	}
 
 	// findMediaSourceAndReturn 从全量 PlaybackInfo 信息中查询指定 MediaSourceId 信息
@@ -300,7 +293,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 	findMediaSourceAndReturn := func(spaceCache cache.RespCache) bool {
 		jsonBody, err := spaceCache.JsonBody()
 		if err != nil {
-			log.Printf(colors.ToRed("解析缓存响应体失败: %v"), err)
+			logs.Error("解析缓存响应体失败: %v", err)
 			return false
 		}
 
@@ -334,7 +327,6 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 	if ok {
 		// 未传递 MediaSourceId, 返回整个缓存数据
 		if itemInfo.MsInfo.Empty {
-			log.Printf(colors.ToBlue("复用缓存空间中的 PlaybackInfo 信息, itemId: %s"), itemInfo.Id)
 			c.Status(spaceCache.Code())
 			https.CloneHeader(c.Writer, spaceCache.Headers())
 			// 避免缓存的请求头中出现脏数据
@@ -356,7 +348,7 @@ func useCacheSpacePlaybackInfo(c *gin.Context, itemInfo ItemInfo) bool {
 
 	// 如果是单个查询, 则手动请求一次全量
 	if _, err := fetchFullPlaybackInfo(itemInfo); err != nil {
-		log.Printf(colors.ToRed("更新缓存空间 PlaybackInfo 信息异常: %v"), err)
+		logs.Error("更新缓存空间 PlaybackInfo 信息异常: %v", err)
 		c.String(http.StatusInternalServerError, "查无缓存, 请稍后尝试重新播放")
 		return true
 	}
@@ -408,7 +400,7 @@ func LoadCacheItems(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	log.Printf(colors.ToBlue("itemInfo 解析结果: %s"), itemInfo)
+	logs.Info("itemInfo 解析结果: %s", itemInfo)
 
 	// coverMediaSources 解析 PlaybackInfo 中的 MediaSources 属性
 	// 并覆盖到当前请求的响应中
@@ -418,7 +410,6 @@ func LoadCacheItems(c *gin.Context) {
 		if !ok || cacheMs.Type() != jsons.JsonTypeArr {
 			return false
 		}
-		log.Printf(colors.ToBlue("使用 PlaybackInfo 的 MediaSources 覆盖 Items 接口响应, itemId: %s"), itemInfo.Id)
 		resJson.Put("MediaSources", cacheMs)
 		c.Writer.Header().Del("Content-Length")
 		return true
@@ -436,7 +427,7 @@ func LoadCacheItems(c *gin.Context) {
 	// 缓存空间中没有当前 Item 的 PlaybackInfo 数据, 手动请求
 	bodyJson, err := fetchFullPlaybackInfo(itemInfo)
 	if err != nil {
-		log.Printf(colors.ToYellow("更新 Items 缓存异常: %v"), err)
+		logs.Warn("更新 Items 缓存异常: %v", err)
 		return
 	}
 	coverMediaSources(bodyJson)

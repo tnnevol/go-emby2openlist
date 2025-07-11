@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"strconv"
 
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 )
 
 const (
@@ -55,8 +55,8 @@ func (p *progressWriter) Read(buf []byte) (int, error) {
 		pct := int(float64(p.Downloaded) * 100 / float64(p.Total))
 		if pct != p.PrintedPct {
 			p.PrintedPct = pct
-			txt := fmt.Sprintf(colors.ToPurple("下载中... %3d%%"), pct)
-			fmt.Print("\r" + txt)
+			fmt.Printf("\033[F")
+			logs.Progress("下载中... %3d%%", pct)
 		}
 	}
 	return n, err
@@ -89,17 +89,17 @@ func AutoDownloadExec(parentPath string) error {
 			return fmt.Errorf("二进制文件路径被目录占用: %s, 请手动处理后尝试重启服务", execPath)
 		}
 		execOk = true
-		fmt.Println(colors.ToGreen("ffmpeg 环境检测通过 ✓"))
+		logs.Success("ffmpeg 环境检测通过 ✓")
 		return nil
 	}
 
-	fmt.Println(colors.ToBlue("检测不到 ffmpeg 环境, 即将开始自动下载"))
+	logs.Info("检测不到 ffmpeg 环境, 即将开始自动下载")
 
 	if err = os.MkdirAll(filepath.Dir(execPath), os.ModePerm); err != nil {
 		return fmt.Errorf("数据目录异常: %s, err: %v", filepath.Dir(execPath), err)
 	}
 
-	fmt.Printf(colors.ToBlue("ffmpeg 下载发布页: %s\n"), ReleasePage)
+	logs.Info("ffmpeg 下载发布页: %s", ReleasePage)
 
 	resp, err := https.Get(ReleasePage + "/" + execName).Do()
 	if err != nil {
@@ -138,7 +138,7 @@ func AutoDownloadExec(parentPath string) error {
 	}
 
 	// 标记就绪状态
-	fmt.Printf(colors.ToGreen("ffmpeg 自动下载成功 ✓, 路径: %s\n"), execPath)
+	logs.Success("ffmpeg 自动下载成功 ✓, 路径: %s", execPath)
 	execOk = true
 	return nil
 }

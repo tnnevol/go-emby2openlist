@@ -1,12 +1,10 @@
 package web
 
 import (
-	"log"
-
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/constant"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/emby"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/m3u8"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,7 +15,7 @@ import (
 var rules [][2]any
 
 func initRulePatterns() {
-	log.Println(colors.ToBlue("正在初始化路由规则..."))
+	logs.Info("正在初始化路由规则...")
 	rules = compileRules([][2]any{
 		// websocket
 		{constant.Reg_Socket, emby.ProxySocket()},
@@ -83,7 +81,7 @@ func initRulePatterns() {
 		// 其余资源走重定向回源
 		{constant.Reg_All, emby.ProxyOrigin},
 	})
-	log.Println(colors.ToGreen("路由规则初始化完成"))
+	logs.Success("路由规则初始化完成")
 }
 
 // initRoutes 初始化路由

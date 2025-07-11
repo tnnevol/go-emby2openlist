@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -12,9 +11,9 @@ import (
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/web/cache"
 
@@ -58,7 +57,6 @@ func ResortRandomItems(c *gin.Context) {
 	bodyBytes := spaceCache.BodyBytes()
 	code := spaceCache.Code()
 	header := spaceCache.Headers()
-	log.Println(colors.ToBlue("使用缓存空间中的 random items 列表"))
 
 	// 响应客户端, 根据 err 自动判断
 	// 如果 err 不为空, 使用原始 bodyBytes
@@ -67,7 +65,7 @@ func ResortRandomItems(c *gin.Context) {
 	defer func() {
 		respBody, _ := json.Marshal(ih)
 		if err != nil {
-			log.Printf(colors.ToRed("随机排序接口非预期响应, err: %v, 返回原始响应"), err)
+			logs.Error("随机排序接口非预期响应, err: %v, 返回原始响应", err)
 			respBody = bodyBytes
 		}
 

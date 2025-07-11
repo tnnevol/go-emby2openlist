@@ -3,7 +3,6 @@ package emby
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,8 +12,8 @@ import (
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/constant"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 )
@@ -99,7 +98,7 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 				}
 
 				ch <- string(content)
-				log.Printf(colors.ToGreen("%s已加载: %s"), successLogPrefix, file.Name())
+				logs.Success("%s已加载: %s", successLogPrefix, file.Name())
 				return nil
 			})
 
@@ -117,7 +116,7 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 	fp := filepath.Join(config.BasePath, constant.CustomJsDirName)
 	jsList, err := loadFiles(fp, ".js", "自定义脚本")
 	if err != nil {
-		log.Printf(colors.ToRed("加载自定义脚本异常: %v"), err)
+		logs.Error("加载自定义脚本异常: %v", err)
 		return
 	}
 	customJsList = append(customJsList, jsList...)
@@ -125,7 +124,7 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 	fp = filepath.Join(config.BasePath, constant.CustomCssDirName)
 	cssList, err := loadFiles(fp, ".css", "自定义样式表")
 	if err != nil {
-		log.Printf(colors.ToRed("加载自定义样式表异常: %v"), err)
+		logs.Error("加载自定义样式表异常: %v", err)
 		return
 	}
 	customCssList = append(customCssList, cssList...)

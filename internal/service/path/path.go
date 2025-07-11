@@ -2,13 +2,12 @@ package path
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 )
 
@@ -46,7 +45,7 @@ func Emby2Openlist(embyPath string) OpenlistPathRes {
 		pathRoutes.WriteString("\n\n【命中 emby2openlist 映射】 => " + openlistFilePath)
 	}
 	pathRoutes.WriteString("\n]")
-	log.Printf(colors.ToGray("embyPath 转换路径: %s"), pathRoutes.String())
+	logs.Tip("embyPath 转换路径: %s", pathRoutes.String())
 
 	rangeFunc := func() ([]string, error) {
 		filePath, err := SplitFromSecondSlash(openlistFilePath)

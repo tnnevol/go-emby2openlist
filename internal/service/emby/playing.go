@@ -4,14 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/jsons"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/randoms"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 	"github.com/gin-gonic/gin"
@@ -103,14 +102,14 @@ func sendPlayingProgress(kType ApiKeyType, kName, apiKey string, body *jsons.Ite
 		return nil
 	}
 
-	log.Printf(colors.ToGray("开始发送辅助 Progress 进度记录, 内容: %v"), body)
+	logs.Tip("开始发送辅助 Progress 进度记录, 内容: %v", body)
 	if err := inner(config.C.Emby.Host + "/emby/Sessions/Playing/Progress"); err != nil {
-		log.Printf(colors.ToYellow("辅助发送 Progress 进度记录失败: %v"), err)
+		logs.Warn("辅助发送 Progress 进度记录失败: %v", err)
 		return
 	}
 	if err := inner(config.C.Emby.Host + "/emby/Sessions/Playing/Stopped"); err != nil {
-		log.Printf(colors.ToYellow("辅助发送 Progress 进度记录失败: %v"), err)
+		logs.Warn("辅助发送 Progress 进度记录失败: %v", err)
 		return
 	}
-	log.Println(colors.ToGreen("辅助发送 Progress 进度记录成功"))
+	logs.Success("辅助发送 Progress 进度记录成功")
 }

@@ -2,13 +2,11 @@ package cache
 
 import (
 	"bytes"
-	"log"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 
 	"github.com/gin-gonic/gin"
@@ -88,7 +86,6 @@ func loopMaintainCache() {
 		space, spaceKey := rc.header.space, rc.header.spaceKey
 		if strs.AllNotEmpty(space, spaceKey) {
 			putSpaceCache(space, spaceKey, rc)
-			log.Printf(colors.ToGreen("刷新缓存空间, space: %s, spaceKey: %s"), space, spaceKey)
 		}
 	}
 
@@ -151,7 +148,6 @@ func putCache(cacheKey string, c *gin.Context, respBody *bytes.Buffer, respHeade
 		case preCacheChan <- rc:
 			return
 		default:
-			log.Println("预缓存通道已满, 淘汰旧缓存")
 			<-preCacheChan
 			doneOnce()
 		}

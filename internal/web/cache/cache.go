@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/constant"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/encrypts"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 
@@ -77,7 +77,7 @@ func RequestCacher() gin.HandlerFunc {
 		// 2 计算 cache key
 		cacheKey, err := calcCacheKey(c)
 		if err != nil {
-			log.Printf("cache key 计算异常: %v, 跳过缓存", err)
+			logs.Warn("cache key 计算异常: %v, 跳过缓存", err)
 			// 如果没有调用 Abort, Gin 会自动继续调用处理器链
 			return
 		}
@@ -172,7 +172,7 @@ func calcCacheKey(c *gin.Context) (string, error) {
 	headerStr := header.String()
 	preEnc := strs.Sort(c.Request.URL.RawQuery + body + headerStr)
 	if headerStr != "" {
-		log.Println("headers to encode cacheKey: ", colors.ToYellow(headerStr))
+		logs.Tip("headers to encode cacheKey: %s", colors.ToYellow(headerStr))
 	}
 
 	// 为防止字典排序后, 不同的 uri 冲突, 这里在排序完的字符串前再加上原始的 uri

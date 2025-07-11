@@ -1,12 +1,11 @@
 package m3u8
 
 import (
-	"log"
 	"sort"
 	"sync"
 	"time"
 
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 )
 
@@ -88,7 +87,7 @@ func loopMaintainPlaylist() {
 
 	// printErr 打印错误日志
 	printErr := func(info *Info, err error) {
-		log.Printf(colors.ToRed("playlist 更新失败, path: %s, template: %s, err: %v"), info.OpenlistPath, info.TemplateId, err)
+		logs.Error("playlist 更新失败, path: %s, template: %s, err: %v", info.OpenlistPath, info.TemplateId, err)
 	}
 
 	// calcMapKey 计算 info 在 map 中的 key
@@ -205,7 +204,7 @@ func loopMaintainPlaylist() {
 			// 长时间未读, 移除
 			if beforeNow(info.LastUpdate + removeTimeMillis) {
 				removeInfo(key)
-				log.Printf(colors.ToGray("playlist 长时间未被更新, 已移除, openlistPath: %s, templateId: %s"), info.OpenlistPath, info.TemplateId)
+				logs.Tip("playlist 长时间未被更新, 已移除, openlistPath: %s, templateId: %s", info.OpenlistPath, info.TemplateId)
 				tot--
 				continue
 			}
@@ -226,7 +225,7 @@ func loopMaintainPlaylist() {
 		}
 
 		if len(cpArr) > 0 {
-			log.Printf(colors.ToPurple("当前正在维护的 playlist 个数: %d, 活跃个数: %d"), tot, active)
+			logs.Progress("当前正在维护的 playlist 个数: %d, 活跃个数: %d", tot, active)
 		}
 	}
 
@@ -268,7 +267,7 @@ func loopMaintainPlaylist() {
 		copy(toDeletes, infoArr)
 		for _, toDel := range toDeletes {
 			removeInfo(calcMapKey(Info{OpenlistPath: toDel.OpenlistPath, TemplateId: toDel.TemplateId}))
-			log.Printf(colors.ToGray("playlist 被淘汰并从内存中移除, openlistPath: %s, templateId: %s"), toDel.OpenlistPath, toDel.TemplateId)
+			logs.Tip("playlist 被淘汰并从内存中移除, openlistPath: %s, templateId: %s", toDel.OpenlistPath, toDel.TemplateId)
 		}
 	}
 
