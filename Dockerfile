@@ -1,5 +1,5 @@
 # 第一阶段：构建阶段
-FROM golang:1.24 AS builder
+FROM golang:1.24-alpine AS builder
 
 # 设置工作目录
 WORKDIR /app
@@ -16,7 +16,6 @@ RUN go mod download
 # 复制源码
 COPY cmd cmd
 COPY internal internal
-COPY pkg pkg
 COPY main.go main.go
 
 # 编译源码成静态链接的二进制文件
