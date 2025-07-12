@@ -309,5 +309,5 @@ func (s *Synchronizer) updateLocalTree(okTaskChan <-chan FileTask, total, added,
 		*deleted++
 	}
 
-	s.snapshot = current
+	s.snapshot = nil
 }
