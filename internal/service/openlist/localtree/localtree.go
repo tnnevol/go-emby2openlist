@@ -52,5 +52,5 @@ func startSync(s *Synchronizer) {
 // logf 带上前缀的日志输出
 func logf(c colors.C, format string, v ...any) {
 	s := fmt.Sprintf(format, v...)
-	log.Println(colors.WrapColor(c, "【openlist 目录树】: "+s))
+	log.Println(colors.WrapColor(c, "[openlist 目录树]: "+s))
 }
