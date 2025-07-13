@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
@@ -18,9 +19,9 @@ import (
 )
 
 func main() {
-	parseFlag()
+	dataRoot := parseFlag()
 
-	if err := config.ReadFromFile("config.yml"); err != nil {
+	if err := config.ReadFromFile(filepath.Join(dataRoot, "config.yml")); err != nil {
 		log.Fatal(err)
 	}
 
@@ -38,11 +39,12 @@ func main() {
 }
 
 // parseFlag 转换命令行参数
-func parseFlag() {
-	ph := flag.Int("port-http", 8095, "HTTP 服务监听端口")
-	phs := flag.Int("port-https", 8094, "HTTPS 服务监听端口")
+func parseFlag() (dataRoot string) {
+	ph := flag.Int("p", 8095, "HTTP 服务监听端口")
+	phs := flag.Int("ps", 8094, "HTTPS 服务监听端口")
 	printVersion := flag.Bool("version", false, "查看程序版本")
 	prod := flag.Bool("prod", false, "是否以生产环境运行")
+	dr := flag.String("dr", ".", "程序数据根目录")
 	flag.Parse()
 
 	if *printVersion {
@@ -54,11 +56,21 @@ func parseFlag() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	dataRoot = "."
+	if *dr != dataRoot {
+		stat, err := os.Stat(*dr)
+		if err != nil || !stat.IsDir() {
+			log.Fatalf("数据根目录 [%s] 不存在", *dr)
+		}
+		dataRoot = *dr
+	}
+
 	if *ph == *phs {
 		log.Fatal("HTTP 和 HTTPS 端口冲突")
 	}
 	webport.HTTP = strconv.Itoa(*ph)
 	webport.HTTPS = strconv.Itoa(*phs)
+	return
 }
 
 func printBanner() {
