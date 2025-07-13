@@ -3,6 +3,7 @@ package ffmpeg
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -55,7 +56,7 @@ func (p *progressWriter) Read(buf []byte) (int, error) {
 		pct := int(float64(p.Downloaded) * 100 / float64(p.Total))
 		if pct != p.PrintedPct {
 			p.PrintedPct = pct
-			fmt.Printf("\n\033[F\033[2K\r")
+			fmt.Printf("\033[F\033[2K\r")
 			logs.Progress("下载中... %3d%%", pct)
 		}
 	}
@@ -123,6 +124,7 @@ func AutoDownloadExec(parentPath string) error {
 	if err != nil {
 		_, downloadErr = io.Copy(execFile, resp.Body)
 	} else {
+		log.Println()
 		pw := progressWriter{
 			Reader:     resp.Body,
 			Total:      int64(totalBytes),
