@@ -55,7 +55,7 @@ func (p *progressWriter) Read(buf []byte) (int, error) {
 		pct := int(float64(p.Downloaded) * 100 / float64(p.Total))
 		if pct != p.PrintedPct {
 			p.PrintedPct = pct
-			fmt.Printf("\033[F")
+			fmt.Printf("\n\033[F\033[2K\r")
 			logs.Progress("下载中... %3d%%", pct)
 		}
 	}
@@ -74,7 +74,7 @@ func AutoDownloadExec(parentPath string) error {
 	if !ok {
 		return fmt.Errorf("不支持的芯片架构: %s/%s, ffmpeg 相关功能失效", gos, garch)
 	}
-	execPath = filepath.Join(parentPath, "data", "ffmpeg", execName)
+	execPath = filepath.Join(parentPath, "lib", "ffmpeg", execName)
 
 	defer func() {
 		if execOk {
