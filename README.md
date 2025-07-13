@@ -337,7 +337,7 @@ docker-compose up -d --build
 
 1. 升级到 go-emby2openlist `v2.2.0` 以上版本
 2. 修改配置，按照自己的需求配置好 `openlist.local-tree-gen` 属性
-3. 修改 `docker-compose.yml` 文件，将容器目录 `/app/openlist-local-tree` 以及 `/app/data` 映射到宿主机中
+3. 修改 `docker-compose.yml` 文件，将容器目录 `/app/openlist-local-tree` 以及 `/app/lib` 映射到宿主机中
 4. 运行程序 开始自动扫描生成目录树
 5. 将宿主机的目录树路径，映射到 Emby 容器中，即可扫描入库
 
