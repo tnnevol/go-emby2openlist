@@ -7,7 +7,7 @@ rm -rf ./dist
 mkdir -p dist
 
 # 定义平台数组
-platforms=("darwin/amd64" "darwin/arm64" "linux/386" "linux/arm" "linux/amd64" "linux/arm64" "windows/386" "windows/arm" "windows/amd64" "windows/arm64")
+platforms=("darwin/amd64" "darwin/arm64" "linux/386" "linux/arm" "linux/amd64" "linux/arm64" "windows/386" "windows/arm" "windows/amd64" "windows/arm64" "freebsd/386" "freebsd/arm" "freebsd/amd64" "freebsd/arm64")
 
 # 循环编译并重命名可执行文件
 for platform in "${platforms[@]}"
