@@ -63,9 +63,6 @@ func (e *Emby) Init() error {
 	if strs.AnyEmpty(e.Host) {
 		return errors.New("emby.host 配置不能为空")
 	}
-	if strs.AnyEmpty(e.MountPath) {
-		return errors.New("emby.mount-path 配置不能为空")
-	}
 	if strs.AnyEmpty(string(e.ProxyErrorStrategy)) {
 		// 失败默认回源
 		e.ProxyErrorStrategy = PeStrategyOrigin
