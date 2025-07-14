@@ -18,6 +18,9 @@ type Openlist struct {
 }
 
 func (a *Openlist) Init() error {
+	if a.LocalTreeGen == nil {
+		a.LocalTreeGen = new(LocalTreeGen)
+	}
 	if err := a.LocalTreeGen.Init(); err != nil {
 		return fmt.Errorf("openlist.local-tree-gen 配置错误: %w", err)
 	}
