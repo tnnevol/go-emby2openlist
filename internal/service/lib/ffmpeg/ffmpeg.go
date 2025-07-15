@@ -23,7 +23,7 @@ func InspectInfo(path string) (Info, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	cmd := exec.Command(execPath, "-i", path)
+	cmd := exec.Command(execPath, "-threads", "1", "-i", path)
 	var eb bytes.Buffer
 	cmd.Stderr = &eb
 	cmd.Run()
@@ -49,7 +49,7 @@ func InspectMusic(path string) (Music, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	cmd := exec.Command(execPath, "-i", path)
+	cmd := exec.Command(execPath, "-threads", "1", "-i", path)
 	var eb bytes.Buffer
 	cmd.Stderr = &eb
 	cmd.Run()
@@ -137,7 +137,7 @@ func ExtractMusicCover(path string) ([]byte, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	cmd := exec.Command(execPath, "-i", path, "-an", "-vframes", "1", "-f", "image2", "-vcodec", "mjpeg", "pipe:1")
+	cmd := exec.Command(execPath, "-threads", "1", "-i", path, "-an", "-vframes", "1", "-f", "image2", "-vcodec", "mjpeg", "pipe:1")
 
 	var out bytes.Buffer
 	var eb bytes.Buffer
