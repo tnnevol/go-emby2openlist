@@ -220,6 +220,10 @@ func (s *Synchronizer) handleSyncTasks(okTaskChan chan<- FileTask) {
 			case <-s.ctx.Done():
 				return nil
 			default:
+				if !config.C.Openlist.LocalTreeGen.IsValidPrefix(task.Path) {
+					continue
+				}
+
 				if task.IsDir {
 					if err := handleDir(task); err != nil {
 						return err
@@ -229,6 +233,7 @@ func (s *Synchronizer) handleSyncTasks(okTaskChan chan<- FileTask) {
 						return err
 					}
 				}
+
 				// 当前任务写入 okTaskChan
 				okTaskChan <- task
 			}

@@ -51,6 +51,9 @@ type LocalTreeGen struct {
 	// RefreshInterval 刷新间隔, 单位: 分钟
 	RefreshInterval int `yaml:"refresh-interval"`
 
+	// ScanPrefixes 指定扫描前缀
+	ScanPrefixes []string `yaml:"scan-prefixes"`
+
 	// virtualContainers 虚拟媒体容器集合 便于快速查询
 	virtualContainers map[string]struct{}
 
@@ -79,6 +82,17 @@ func (ltg *LocalTreeGen) Init() error {
 
 	if ltg.RefreshInterval <= 0 {
 		return fmt.Errorf("无效刷新间隔: %d", ltg.RefreshInterval)
+	}
+
+	if len(ltg.ScanPrefixes) == 0 {
+		// 没有配置则全量扫描
+		ltg.ScanPrefixes = append(ltg.ScanPrefixes, "/")
+	}
+	for _, prefix := range ltg.ScanPrefixes {
+		prefix = strings.TrimSpace(prefix)
+		if !strings.HasPrefix(prefix, "/") {
+			return fmt.Errorf("无效扫描前缀: [%s], 必须以 / 开头", prefix)
+		}
 	}
 
 	ss := strings.Split(strings.TrimSpace(ltg.VirtualContainers), ",")
@@ -121,4 +135,14 @@ func (ltg *LocalTreeGen) IsMusic(container string) bool {
 	container = strings.ToLower(container)
 	_, ok := ltg.musicContainers[container]
 	return ok
+}
+
+// IsValidPrefix 判断一个 openlist 路径是否在扫描前缀的范围中
+func (ltg *LocalTreeGen) IsValidPrefix(path string) bool {
+	for _, prefix := range ltg.ScanPrefixes {
+		if strings.HasPrefix(path, prefix) || strings.HasPrefix(prefix, path) {
+			return true
+		}
+	}
+	return false
 }
