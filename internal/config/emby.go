@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/maps"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/randoms"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
@@ -109,20 +110,20 @@ func (e *Emby) Init() error {
 type Strm struct {
 	// PathMap 远程路径映射
 	PathMap []string `yaml:"path-map"`
-	// pathMap 配置初始化后转换为标准的 map 结构
-	pathMap map[string]string
+	// pathMap 配置初始化后转换为二维数组切片结构
+	pathMap [][2]string
 }
 
 // Init 配置初始化
 func (s *Strm) Init() error {
-	s.pathMap = make(map[string]string)
+	s.pathMap = make([][2]string, 0)
 	for _, path := range s.PathMap {
 		splits := strings.Split(path, "=>")
 		if len(splits) != 2 {
 			return fmt.Errorf("映射配置不规范: %s, 请使用 => 进行分割", path)
 		}
 		from, to := strings.TrimSpace(splits[0]), strings.TrimSpace(splits[1])
-		s.pathMap[from] = to
+		s.pathMap = append(s.pathMap, [2]string{from, to})
 	}
 	return nil
 }
@@ -130,8 +131,10 @@ func (s *Strm) Init() error {
 // MapPath 将传入路径按照预配置的映射关系从上到下按顺序进行映射,
 // 至多成功映射一次
 func (s *Strm) MapPath(path string) string {
-	for from, to := range s.pathMap {
+	for _, m := range s.pathMap {
+		from, to := m[0], m[1]
 		if strings.Contains(path, from) {
+			logs.Tip("映射路径: [%s] => [%s]", from, to)
 			return strings.Replace(path, from, to, 1)
 		}
 	}
