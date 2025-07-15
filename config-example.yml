@@ -32,7 +32,7 @@ emby:
   # 检测到该路径为前缀的媒体时, 代理回源处理
   local-media-root: /data/local
 
-# 该配置仅针对通过磁盘挂载方式接入的网盘, 如果你使用的是 strm, 可忽略该配置
+# openlist 访问配置
 openlist:
   host: http://192.168.0.109:5244            # openlist 访问地址
   token: openlist-xxxxx                      # openlist api key 可以在 openlist 管理后台查看
@@ -54,8 +54,6 @@ openlist:
     virtual-containers: mp4,mkv
     # strm 媒体容器, 生成的是与媒体名称相同的 strm 文件
     # 通过 emby 源端口也可能正常播放
-    #
-    # 若媒体元数据是内嵌在源文件中, 如带有标签的音乐, 则配置于此, 不区分大小写
     strm-containers: ts
     # 音乐媒体容器, 生成的是与媒体同名的空文件
     # 必须使用本项目反代 openlist 才可以正常播放
