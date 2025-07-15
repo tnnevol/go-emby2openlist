@@ -109,6 +109,7 @@ func Redirect2OpenlistLink(c *gin.Context) {
 
 		// 处理直链
 		if !fi.UseTranscode {
+			res.Data.Url = config.C.Emby.Strm.MapPath(res.Data.Url)
 			logs.Success("请求成功, 重定向到: %s", res.Data.Url)
 			c.Header(cache.HeaderKeyExpired, cache.Duration(time.Minute*10))
 			c.Redirect(http.StatusTemporaryRedirect, res.Data.Url)
