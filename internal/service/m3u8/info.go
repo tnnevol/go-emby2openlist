@@ -22,11 +22,11 @@ import (
 // NewByContent 根据 m3u8 文本初始化一个 info 对象
 //
 // 如果文本中的 ts 地址是相对地址, 可通过 baseUrl 指定请求前缀
-func NewByContent(baseUrl, content string) (*Info, error) {
+func NewByContent(baseUrl string, content io.Reader) (*Info, error) {
 	info := Info{RemoteBase: baseUrl}
 
 	// 逐行遍历文本
-	scanner := bufio.NewScanner(strings.NewReader(content))
+	scanner := bufio.NewScanner(content)
 	lineComments := make([]string, 0)
 	for scanner.Scan() {
 		lineBytes := scanner.Bytes()
@@ -36,8 +36,8 @@ func NewByContent(baseUrl, content string) (*Info, error) {
 
 		// 1 扫描到一行 ts
 		if lineBytes[0] != '#' {
-			if bytes.HasPrefix(lineBytes, []byte(baseUrl)) {
-				lineBytes = bytes.TrimPrefix(lineBytes, []byte(baseUrl))
+			lineBytes, found := bytes.CutPrefix(lineBytes, []byte(baseUrl))
+			if found {
 				lineBytes = bytes.TrimLeft(lineBytes, "/")
 			}
 			tsInfo := TsInfo{Url: string(lineBytes), Comments: append([]string(nil), lineComments...)}
@@ -96,13 +96,9 @@ func NewByRemote(url string, header http.Header) (*Info, error) {
 	if _, ok := ValidM3U8Contents[contentType]; !ok {
 		return nil, fmt.Errorf("不是有效的 m3u8 响应: %s", contentType)
 	}
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("读取响应体失败: %v", err)
-	}
 
 	// 4 解析远程响应
-	return NewByContent(baseUrl, string(bodyBytes))
+	return NewByContent(baseUrl, resp.Body)
 }
 
 // GetTsLink 获取 ts 流的直链地址
