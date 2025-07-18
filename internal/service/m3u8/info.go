@@ -2,6 +2,7 @@ package m3u8
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -15,7 +16,6 @@ import (
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
-	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 )
 
@@ -29,36 +29,39 @@ func NewByContent(baseUrl, content string) (*Info, error) {
 	scanner := bufio.NewScanner(strings.NewReader(content))
 	lineComments := make([]string, 0)
 	for scanner.Scan() {
-		line := scanner.Text()
-		if strs.AnyEmpty(line) {
+		lineBytes := scanner.Bytes()
+		if len(lineBytes) == 0 {
 			continue
 		}
 
 		// 1 扫描到一行 ts
-		if !strings.HasPrefix(line, "#") {
-			if strings.HasPrefix(line, baseUrl) {
-				line = strings.Replace(line, baseUrl, "", 1)
-				for strings.HasPrefix(line, "/") {
-					line = line[1:]
-				}
+		if lineBytes[0] != '#' {
+			if bytes.HasPrefix(lineBytes, []byte(baseUrl)) {
+				lineBytes = bytes.TrimPrefix(lineBytes, []byte(baseUrl))
+				lineBytes = bytes.TrimLeft(lineBytes, "/")
 			}
-			tsInfo := TsInfo{Url: line, Comments: lineComments}
+			tsInfo := TsInfo{Url: string(lineBytes), Comments: append([]string(nil), lineComments...)}
 			info.RemoteTsInfos = append(info.RemoteTsInfos, &tsInfo)
-			lineComments = make([]string, 0)
+			lineComments = lineComments[:0]
 			continue
 		}
 
 		// 2 扫描到注释
-		prefix := strings.Split(line, ":")[0]
+		segIdx := bytes.IndexByte(lineBytes, ':')
+		if segIdx == -1 {
+			segIdx = len(lineBytes)
+		}
+
+		prefix := string(lineBytes[:segIdx])
 		if _, ok := ParentHeadComments[prefix]; ok {
-			info.HeadComments = append(info.HeadComments, line)
+			info.HeadComments = append(info.HeadComments, string(lineBytes))
 			continue
 		}
 		if _, ok := ParentTailComments[prefix]; ok {
-			info.TailComments = append(info.TailComments, line)
+			info.TailComments = append(info.TailComments, string(lineBytes))
 			continue
 		}
-		lineComments = append(lineComments, line)
+		lineComments = append(lineComments, string(lineBytes))
 	}
 
 	if scanner.Err() != nil {
