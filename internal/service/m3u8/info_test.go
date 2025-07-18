@@ -2,6 +2,7 @@ package m3u8_test
 
 import (
 	"log"
+	"strings"
 	"testing"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
@@ -385,7 +386,7 @@ media-183.ts?di=bj29&dr=339781490&f=6481468daffef00c8fc24497a7dcc835407b3293&u=6
 `
 
 func TestNewByContent(t *testing.T) {
-	info, err := m3u8.NewByContent("https://blog.ambitiousjun.cn/", TestContent)
+	info, err := m3u8.NewByContent("https://blog.ambitiousjun.cn/", strings.NewReader(TestContent))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -402,7 +403,7 @@ func TestNewByRemote(t *testing.T) {
 }
 
 func TestConvert(t *testing.T) {
-	info, err := m3u8.NewByContent("https://blog.ambitiousjun.cn/", TestContent)
+	info, err := m3u8.NewByContent("https://blog.ambitiousjun.cn/", strings.NewReader(TestContent))
 	if err != nil {
 		log.Fatal(err)
 	}
