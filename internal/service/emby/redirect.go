@@ -117,7 +117,7 @@ func Redirect2OpenlistLink(c *gin.Context) {
 		}
 
 		// 代理转码 m3u
-		u, _ := url.Parse(strings.ReplaceAll(MasterM3U8UrlTemplate, "${itemId}", itemInfo.Id))
+		u, _ := url.Parse(strings.ReplaceAll(config.ServerInternalRequestHost()+MasterM3U8UrlTemplate, "${itemId}", itemInfo.Id))
 		q := u.Query()
 		q.Set("template_id", itemInfo.MsInfo.TemplateId)
 		q.Set(QueryApiKeyName, itemInfo.ApiKey)

@@ -48,7 +48,7 @@ func ProxyPlaylist(c *gin.Context) {
 		c.String(http.StatusOK, content)
 	}
 
-	routePrefix := "/videos"
+	routePrefix := https.ClientRequestHost(c.Request) + "/videos"
 	m3uContent, ok := GetPlaylist(params.OpenlistPath, params.TemplateId, true, true, routePrefix, params.ApiKey)
 	if ok {
 		okContent(m3uContent)

@@ -167,16 +167,17 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 
 	// 遍历每个 Item, 修改 MediaSource 信息
 	proresMediaStreams, _ := jsons.New(`[{"AspectRatio":"16:9","AttachmentSize":0,"AverageFrameRate":25,"BitDepth":8,"BitRate":4838626,"Codec":"prores","CodecTag":"hev1","DisplayTitle":"4K HEVC","ExtendedVideoSubType":"None","ExtendedVideoSubTypeDescription":"None","ExtendedVideoType":"None","Height":2160,"Index":0,"IsDefault":true,"IsExternal":false,"IsForced":false,"IsHearingImpaired":false,"IsInterlaced":false,"IsTextSubtitleStream":false,"Language":"und","Level":150,"PixelFormat":"yuv420p","Profile":"Main","Protocol":"File","RealFrameRate":25,"RefFrames":1,"SupportsExternalStream":false,"TimeBase":"1/90000","Type":"Video","VideoRange":"SDR","Width":3840},{"AttachmentSize":0,"BitRate":124573,"ChannelLayout":"stereo","Channels":2,"Codec":"aac","CodecTag":"mp4a","DisplayTitle":"AAC stereo (默认)","ExtendedVideoSubType":"None","ExtendedVideoSubTypeDescription":"None","ExtendedVideoType":"None","Index":1,"IsDefault":true,"IsExternal":false,"IsForced":false,"IsHearingImpaired":false,"IsInterlaced":false,"IsTextSubtitleStream":false,"Language":"und","Profile":"LC","Protocol":"File","SampleRate":44100,"SupportsExternalStream":false,"TimeBase":"1/44100","Type":"Audio"}]`)
+	allTplIds := getAllPreviewTemplateIds()
+	toAdd := make([]*jsons.Item, 0, len(allTplIds))
 	itemsArr.RangeArr(func(index int, item *jsons.Item) error {
 		mediaSources, ok := item.Attr("MediaSources").Done()
 		if !ok || mediaSources.Empty() {
 			return nil
 		}
 
-		toAdd := make([]*jsons.Item, 0)
+		toAdd = toAdd[:0]
 		mediaSources.RangeArr(func(_ int, ms *jsons.Item) error {
 			originId, _ := ms.Attr("Id").String()
-			allTplIds := getAllPreviewTemplateIds()
 			simplifyMediaName(ms)
 
 			if path, ok := ms.Attr("Path").String(); ok {
@@ -188,12 +189,29 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 				return nil
 			}
 
+			path, _ := ms.Attr("Path").Done()
+			st, _ := ms.Attr("SupportsTranscoding").Done()
+			t, _ := ms.Attr("Type").Done()
+			rtt, _ := ms.Attr("RunTimeTicks").Done()
+			sdp, _ := ms.Attr("SupportsDirectPlay").Done()
+			itemId, _ := ms.Attr("ItemId").Done()
+			sds, _ := ms.Attr("SupportsDirectStream").Done()
+			ctn, _ := ms.Attr("Container").Done()
+
 			originName, _ := ms.Attr("Name").String()
 			for _, tplId := range allTplIds {
-				copyMs := jsons.FromValue(ms.Struct())
+				copyMs := jsons.NewEmptyObj()
 				copyMs.Put("Name", jsons.FromValue(fmt.Sprintf("(%s) %s", tplId, originName)))
 				copyMs.Put("Id", jsons.FromValue(fmt.Sprintf("%s%s%s", originId, MediaSourceIdSegment, tplId)))
 				copyMs.Put("MediaStreams", proresMediaStreams)
+				copyMs.Put("Path", path)
+				copyMs.Put("SupportsTranscoding", st)
+				copyMs.Put("Type", t)
+				copyMs.Put("RunTimeTicks", rtt)
+				copyMs.Put("SupportsDirectPlay", sdp)
+				copyMs.Put("ItemId", itemId)
+				copyMs.Put("SupportsDirectStream", sds)
+				copyMs.Put("Container", ctn)
 				toAdd = append(toAdd, copyMs)
 			}
 			return nil
