@@ -1,8 +1,8 @@
 package jsons
 
 import (
+	"bytes"
 	"encoding/json"
-	"strings"
 )
 
 // Struct 将 item 转换为结构体对象
@@ -27,61 +27,31 @@ func (i *Item) Struct() any {
 	}
 }
 
-// String 将 item 转换为 json 字符串
-func (i *Item) String() string {
-	var buf strings.Builder
-	writeJSON(&buf, i)
-	return buf.String()
-}
+func (i *Item) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
 
-func writeJSON(buf *strings.Builder, i *Item) {
 	switch i.jType {
 	case JsonTypeVal:
-		writeValueJSON(buf, i.val)
+		err := enc.Encode(i.val)
+		return bytes.TrimSpace(buf.Bytes()), err
 	case JsonTypeObj:
-		buf.WriteByte('{')
-		first := true
-		for k, v := range i.obj {
-			if !first {
-				buf.WriteByte(',')
-			}
-			first = false
-
-			// Key 编码（禁用 HTML 转义）
-			var keyBuf strings.Builder
-			enc := json.NewEncoder(&keyBuf)
-			enc.SetEscapeHTML(false)
-			_ = enc.Encode(k)
-			key := strings.TrimSpace(keyBuf.String())
-			buf.WriteString(key)
-
-			buf.WriteByte(':')
-			writeJSON(buf, v)
-		}
-		buf.WriteByte('}')
+		err := enc.Encode(i.obj)
+		return bytes.TrimSpace(buf.Bytes()), err
 	case JsonTypeArr:
-		buf.WriteByte('[')
-		for idx, elem := range i.arr {
-			if idx > 0 {
-				buf.WriteByte(',')
-			}
-			writeJSON(buf, elem)
-		}
-		buf.WriteByte(']')
+		err := enc.Encode(i.arr)
+		return bytes.TrimSpace(buf.Bytes()), err
 	default:
-		buf.WriteString("null")
+		return []byte("null"), nil
 	}
 }
 
-func writeValueJSON(buf *strings.Builder, val any) {
-	var tmp strings.Builder
-	enc := json.NewEncoder(&tmp)
+// String 将 item 转换为 json 字符串
+func (i *Item) String() string {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
 	enc.SetEscapeHTML(false)
-	err := enc.Encode(val)
-	if err != nil {
-		buf.WriteString("null")
-		return
-	}
-	s := strings.TrimSpace(tmp.String())
-	buf.WriteString(s)
+	enc.Encode(i)
+	return buf.String()
 }
