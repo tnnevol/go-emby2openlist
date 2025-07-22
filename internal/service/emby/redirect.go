@@ -2,7 +2,6 @@ package emby
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"slices"
@@ -31,7 +30,7 @@ func Redirect2Transcode(c *gin.Context) {
 		ProxyOrigin(c)
 		return
 	}
-	tu, _ := url.Parse("/videos/proxy_playlist")
+	tu, _ := url.Parse(https.ClientRequestHost(c.Request) + "/videos/proxy_playlist")
 	q := tu.Query()
 	q.Set("openlist_path", openlistPath)
 	q.Set(QueryApiKeyName, apiKey)
@@ -117,21 +116,13 @@ func Redirect2OpenlistLink(c *gin.Context) {
 		}
 
 		// 代理转码 m3u
-		u, _ := url.Parse(strings.ReplaceAll(https.ClientRequestHost(c.Request)+MasterM3U8UrlTemplate, "${itemId}", itemInfo.Id))
+		u, _ := url.Parse(https.ClientRequestHost(c.Request) + "/videos/proxy_playlist")
 		q := u.Query()
 		q.Set("template_id", itemInfo.MsInfo.TemplateId)
 		q.Set(QueryApiKeyName, itemInfo.ApiKey)
 		q.Set("openlist_path", openlist.PathEncode(path))
 		u.RawQuery = q.Encode()
-		resp, err := https.Get(u.String()).Do()
-		if err != nil {
-			allErrors.WriteString(fmt.Sprintf("代理转码 m3u 失败: %v;", err))
-			return false
-		}
-		defer resp.Body.Close()
-		c.Status(resp.StatusCode)
-		https.CloneHeader(c.Writer, resp.Header)
-		io.Copy(c.Writer, resp.Body)
+		c.Redirect(http.StatusTemporaryRedirect, u.String())
 		return true
 	}
 
