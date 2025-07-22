@@ -6,9 +6,9 @@ import "runtime"
 type Range struct{ Start, End int }
 
 // SliceChunk 基于 CPU 核心数对切片进行分块, 返回区间切片
-func SliceChunk(size int) (ranges []Range) {
+func SliceChunk(size int) []Range {
 	if size <= 0 {
-		return
+		return []Range{}
 	}
 
 	// 计算分块数
@@ -18,10 +18,11 @@ func SliceChunk(size int) (ranges []Range) {
 	chunkSize := (size + chunkNum - 1) / chunkNum
 
 	// 分块
+	ranges := make([]Range, 0, chunkNum)
 	for i := range chunkNum {
 		start := i * chunkSize
 		end := min((i+1)*chunkSize, size)
 		ranges = append(ranges, Range{Start: start, End: end})
 	}
-	return
+	return ranges
 }

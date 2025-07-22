@@ -33,7 +33,7 @@ func globalDftHandler(c *gin.Context) {
 
 // compileRules 编译路由的正则表达式
 func compileRules(rs [][2]any) [][2]any {
-	newRs := make([][2]any, 0)
+	newRs := make([][2]any, 0, len(rs))
 	for _, rule := range rs {
 		reg, err := regexp.Compile(rule[0].(string))
 		if err != nil {

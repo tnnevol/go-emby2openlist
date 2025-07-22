@@ -69,7 +69,7 @@ func ResortEpisodes(c *gin.Context) {
 			Played bool
 		}
 	}
-	playedItems, allItems := make([]json.RawMessage, 0), make([]json.RawMessage, 0)
+	playedItems, allItems := make([]json.RawMessage, 0, len(ih.Items)), make([]json.RawMessage, 0, len(ih.Items))
 	for idx, value := range ih.Items {
 		if len(allItems) > 0 {
 			// 找到第一个未播的剧集之后, 剩余剧集都当作是未播的

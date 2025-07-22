@@ -58,7 +58,7 @@ func loopMaintainCache() {
 	cleanCache := func() {
 		validCnt := 0
 		nowMillis := time.Now().UnixMilli()
-		toDelete := make([]*respCache, 0)
+		toDelete := make([]*respCache, 0, 1<<3)
 
 		cacheMap.Range(func(key, value any) bool {
 			rc := value.(*respCache)

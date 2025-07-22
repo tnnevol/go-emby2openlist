@@ -26,13 +26,7 @@ func ChangeBaseVideoModuleCorsDefined(c *gin.Context) {
 	resp.Header.Del("Content-Length")
 	defer resp.Body.Close()
 
-	// 2 读取原始响应
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if checkErr(c, err) {
-		return
-	}
-
-	// 3 注入 JS 代码补丁
+	// 2 注入 JS 代码补丁
 	modObj := `window.defined['modules/htmlvideoplayer/plugin.js']`
 	modObjDefault := modObj + ".default"
 	modObjPrototype := modObjDefault + ".prototype"
@@ -41,6 +35,7 @@ func ChangeBaseVideoModuleCorsDefined(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 	https.CloneHeader(c.Writer, resp.Header)
-	c.Writer.Write(append(bodyBytes, []byte(jsScript)...))
+	io.Copy(c.Writer, resp.Body)
+	c.Writer.Write([]byte(jsScript))
 	c.Writer.Flush()
 }

@@ -23,11 +23,16 @@ import (
 //
 // 如果文本中的 ts 地址是相对地址, 可通过 baseUrl 指定请求前缀
 func NewByContent(baseUrl string, content io.Reader) (*Info, error) {
-	info := Info{RemoteBase: baseUrl}
+	info := Info{
+		RemoteBase:    baseUrl,
+		RemoteTsInfos: make([]*TsInfo, 0, 1<<7),
+		HeadComments:  make([]string, 0, 1<<3),
+		TailComments:  make([]string, 0, 1<<3),
+	}
 
 	// 逐行遍历文本
 	scanner := bufio.NewScanner(content)
-	lineComments := make([]string, 0)
+	lineComments := make([]string, 0, 1<<3)
 	for scanner.Scan() {
 		lineBytes := scanner.Bytes()
 		if len(lineBytes) == 0 {
@@ -234,10 +239,10 @@ func (i *Info) UpdateContent() error {
 
 	// 拷贝最新数据
 	i.RemoteBase = newInfo.RemoteBase
-	i.HeadComments = append(([]string)(nil), newInfo.HeadComments...)
-	i.TailComments = append(([]string)(nil), newInfo.TailComments...)
-	i.RemoteTsInfos = append(([]*TsInfo)(nil), newInfo.RemoteTsInfos...)
-	i.Subtitles = append(([]openlist.TranscodingSubtitleInfo)(nil), res.Data.Subtitles...)
+	i.HeadComments = append(i.HeadComments[:0], newInfo.HeadComments...)
+	i.TailComments = append(i.TailComments[:0], newInfo.TailComments...)
+	i.RemoteTsInfos = append(i.RemoteTsInfos[:0], newInfo.RemoteTsInfos...)
+	i.Subtitles = append(i.Subtitles[:0], res.Data.Subtitles...)
 	i.LastUpdate = time.Now().UnixMilli()
 	return nil
 }

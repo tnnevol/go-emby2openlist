@@ -116,7 +116,7 @@ type Strm struct {
 
 // Init 配置初始化
 func (s *Strm) Init() error {
-	s.pathMap = make([][2]string, 0)
+	s.pathMap = make([][2]string, 0, len(s.PathMap))
 	for _, path := range s.PathMap {
 		splits := strings.Split(path, "=>")
 		if len(splits) != 2 {

@@ -58,7 +58,7 @@ func Emby2Openlist(embyPath string) OpenlistPathRes {
 			return nil, fmt.Errorf("请求 openlist fs list 接口异常: %s", res.Msg)
 		}
 
-		paths := make([]string, 0)
+		paths := make([]string, 0, len(res.Data.Content))
 		for _, c := range res.Data.Content {
 			if !c.IsDir {
 				continue

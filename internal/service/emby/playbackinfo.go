@@ -89,7 +89,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 	}
 
 	var haveReturned = errors.New("have returned")
-	resChans := make([]chan []*jsons.Item, 0)
+	resChans := make([]chan []*jsons.Item, 0, mediaSources.Len())
 	err = mediaSources.RangeArr(func(_ int, source *jsons.Item) error {
 		simplifyMediaName(source)
 

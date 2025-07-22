@@ -53,7 +53,7 @@ func FetchResource(fi FetchInfo) model.HttpRes[Resource] {
 	if len(taskList) == 0 {
 		return failedAndTryRaw(res)
 	}
-	var allFmts []string
+	allFmts := make([]string, 0, len(taskList))
 	idx := -1
 	for i, task := range taskList {
 		allFmts = append(allFmts, task.TemplateId)
