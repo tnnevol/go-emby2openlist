@@ -6,6 +6,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -157,6 +158,7 @@ func ProxyAddItemsPreviewInfo(c *gin.Context) {
 	defer func() {
 		https.CloneHeader(c.Writer, resp.Header)
 		jsons.OkResp(c.Writer, resJson)
+		go runtime.GC()
 	}()
 
 	// 获取 Items 数组
