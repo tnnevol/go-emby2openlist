@@ -16,7 +16,7 @@ type Path struct {
 }
 
 func (p *Path) Init() error {
-	p.emby2OpenlistArr = make([][2]string, 0)
+	p.emby2OpenlistArr = make([][2]string, 0, len(p.Emby2Openlist))
 	for _, e2a := range p.Emby2Openlist {
 		arr := strings.Split(e2a, ":")
 		if len(arr) != 2 {

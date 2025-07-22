@@ -19,10 +19,10 @@ import (
 )
 
 // customJsList 首次访问时, 将所有自定义脚本预加载在内存中
-var customJsList = []string{}
+var customJsList []string
 
 // customCssList 首次访问时, 将所有自定义样式预加载在内存中
-var customCssList = []string{}
+var customCssList []string
 
 // loadAllCustomCssJs 加载所有自定义脚本
 var loadAllCustomCssJs = sync.OnceFunc(func() {
@@ -119,7 +119,7 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 		logs.Error("加载自定义脚本异常: %v", err)
 		return
 	}
-	customJsList = append(customJsList, jsList...)
+	customJsList = jsList
 
 	fp = filepath.Join(config.BasePath, constant.CustomCssDirName)
 	cssList, err := loadFiles(fp, ".css", "自定义样式表")
@@ -127,7 +127,7 @@ var loadAllCustomCssJs = sync.OnceFunc(func() {
 		logs.Error("加载自定义样式表异常: %v", err)
 		return
 	}
-	customCssList = append(customCssList, cssList...)
+	customCssList = cssList
 })
 
 // ProxyIndexHtml 代理 index.html 注入自定义脚本样式文件

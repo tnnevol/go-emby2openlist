@@ -288,7 +288,7 @@ func (s *Synchronizer) updateLocalTree(okTaskChan <-chan FileTask, total, added,
 		}
 	}
 
-	toDelete := []string{}
+	toDelete := make([]string, 0, 1<<6)
 
 	// 统计并删除本地过期文件
 	for path := range s.snapshot {

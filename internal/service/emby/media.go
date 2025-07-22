@@ -490,7 +490,7 @@ func resolveMediaSourceId(id string) (MsInfo, error) {
 func getAllPreviewTemplateIds() []string {
 	allIds := []string{"LD", "SD", "HD", "FHD", "QHD"}
 
-	res := []string{}
+	res := make([]string, 0, len(allIds))
 	for _, id := range allIds {
 		if config.C.VideoPreview.IsTemplateIgnore(id) {
 			continue
