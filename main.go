@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -19,6 +21,8 @@ import (
 )
 
 func main() {
+	go func() { http.ListenAndServe(":60360", nil) }()
+
 	dataRoot := parseFlag()
 
 	if err := config.ReadFromFile(filepath.Join(dataRoot, "config.yml")); err != nil {
