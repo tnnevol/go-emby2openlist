@@ -3,6 +3,7 @@ package jsons
 import (
 	"bytes"
 	"encoding/json"
+	"sync"
 )
 
 // Struct 将 item 转换为结构体对象
@@ -27,9 +28,19 @@ func (i *Item) Struct() any {
 	}
 }
 
+// bufPool json 序列化时复用缓冲区
+var bufPool = sync.Pool{
+	New: func() any {
+		return new(bytes.Buffer)
+	},
+}
+
 func (i *Item) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	enc := json.NewEncoder(&buf)
+	buf := bufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	defer bufPool.Put(buf)
+
+	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
 
 	switch i.jType {
@@ -49,9 +60,13 @@ func (i *Item) MarshalJSON() ([]byte, error) {
 
 // String 将 item 转换为 json 字符串
 func (i *Item) String() string {
-	var buf bytes.Buffer
-	enc := json.NewEncoder(&buf)
+	buf := bufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	defer bufPool.Put(buf)
+
+	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
+
 	enc.Encode(i)
 	return buf.String()
 }

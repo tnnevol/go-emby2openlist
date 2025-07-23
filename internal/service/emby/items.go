@@ -118,6 +118,9 @@ func RandomItemsWithLimit(c *gin.Context) {
 	c.Header(cache.HeaderKeyExpired, cache.Duration(time.Hour*3))
 	c.Header(cache.HeaderKeySpace, ItemsCacheSpace)
 	c.Header(cache.HeaderKeySpaceKey, calcRandomItemsCacheKey(c))
+
+	c.Writer.WriteHeaderNow()
+
 	io.Copy(c.Writer, resp.Body)
 }
 
