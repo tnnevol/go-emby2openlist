@@ -15,6 +15,7 @@ import (
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/lib/ffmpeg"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/music"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/bytess"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs/colors"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/mp4s"
@@ -232,7 +233,9 @@ func (rw *RawWriter) Write(task FileTask, localPath string) error {
 			return fmt.Errorf("请求 openlist 直链失败, 响应状态: %s", resp.Status)
 		}
 
-		if _, err = io.Copy(file, resp.Body); err != nil {
+		buf := bytess.CommonBuffer()
+		defer buf.PutBack()
+		if _, err = io.CopyBuffer(file, resp.Body, buf.Bytes()); err != nil {
 			return fmt.Errorf("写入 openlist 源文件到本地磁盘失败, 拷贝异常: %w", err)
 		}
 

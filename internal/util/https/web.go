@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/bytess"
 )
 
 // ExtractReqBody 克隆并提取请求体, 返回一个新的可被读取的流
@@ -107,6 +109,8 @@ func ProxyPass(r *http.Request, w http.ResponseWriter, remote string) error {
 	CloneHeader(w, resp.Header)
 
 	// 3 回写响应体
-	io.Copy(w, resp.Body)
+	buf := bytess.CommonBuffer()
+	defer buf.PutBack()
+	io.CopyBuffer(w, resp.Body, buf.Bytes())
 	return err
 }

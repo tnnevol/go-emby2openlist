@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/bytess"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/gin-gonic/gin"
 )
@@ -35,7 +36,11 @@ func ChangeBaseVideoModuleCorsDefined(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 	https.CloneHeader(c.Writer, resp.Header)
-	io.Copy(c.Writer, resp.Body)
+
+	buf := bytess.CommonBuffer()
+	defer buf.PutBack()
+	io.CopyBuffer(c.Writer, resp.Body, buf.Bytes())
+
 	c.Writer.Write([]byte(jsScript))
 	c.Writer.Flush()
 }
