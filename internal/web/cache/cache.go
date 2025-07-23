@@ -105,7 +105,9 @@ func RequestCacher() gin.HandlerFunc {
 		}
 
 		// 4 使用自定义的响应器
-		customWriter := &respCacheWriter{body: respBodyBufPool.Get().(*bytes.Buffer), ResponseWriter: c.Writer}
+		buf := respBodyBufPool.Get().(*bytes.Buffer)
+		buf.Reset()
+		customWriter := &respCacheWriter{body: buf, ResponseWriter: c.Writer}
 		c.Writer = customWriter
 		defer respBodyBufPool.Put(customWriter.body)
 
