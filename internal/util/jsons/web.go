@@ -19,9 +19,9 @@ func Resp(w http.ResponseWriter, code int, data *Item) {
 	if data == nil {
 		data = NewEmptyObj()
 	}
-	str := data.String()
 
-	w.Header().Set("Content-Length", strconv.Itoa(len(str)))
+	bytes := data.Bytes()
+	w.Header().Set("Content-Length", strconv.Itoa(len(bytes)))
 	w.WriteHeader(code)
-	w.Write([]byte(str))
+	w.Write(bytes)
 }

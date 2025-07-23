@@ -58,8 +58,8 @@ func (i *Item) MarshalJSON() ([]byte, error) {
 	}
 }
 
-// String 将 item 转换为 json 字符串
-func (i *Item) String() string {
+// Bytes 将 item 转换为字节切片
+func (i *Item) Bytes() []byte {
 	buf := bufPool.Get().(*bytes.Buffer)
 	buf.Reset()
 	defer bufPool.Put(buf)
@@ -68,5 +68,10 @@ func (i *Item) String() string {
 	enc.SetEscapeHTML(false)
 
 	enc.Encode(i)
-	return buf.String()
+	return buf.Bytes()
+}
+
+// String 将 item 转换为 json 字符串
+func (i *Item) String() string {
+	return string(i.Bytes())
 }
