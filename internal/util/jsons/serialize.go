@@ -68,7 +68,7 @@ func (i *Item) Bytes() []byte {
 	enc.SetEscapeHTML(false)
 
 	enc.Encode(i)
-	return buf.Bytes()
+	return append([]byte(nil), buf.Bytes()...)
 }
 
 // String 将 item 转换为 json 字符串
