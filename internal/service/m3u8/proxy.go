@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/bytess"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/strs"
@@ -130,7 +131,10 @@ func ProxySubtitle(c *gin.Context) {
 		defer resp.Body.Close()
 		https.CloneHeader(c.Writer, resp.Header)
 		c.Status(resp.StatusCode)
-		if _, err = io.Copy(c.Writer, resp.Body); err != nil {
+
+		buf := bytess.CommonBuffer()
+		defer buf.PutBack()
+		if _, err = io.CopyBuffer(c.Writer, resp.Body, buf.Bytes()); err != nil {
 			logs.Error("代理字幕失败: %v", err)
 			c.String(http.StatusInternalServerError, "代理字幕失败, 请检查日志")
 			return

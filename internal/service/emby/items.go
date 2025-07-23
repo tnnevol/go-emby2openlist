@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/bytess"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/jsons"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
@@ -121,7 +122,9 @@ func RandomItemsWithLimit(c *gin.Context) {
 
 	c.Writer.WriteHeaderNow()
 
-	io.Copy(c.Writer, resp.Body)
+	buf := bytess.CommonBuffer()
+	defer buf.PutBack()
+	io.CopyBuffer(c.Writer, resp.Body, buf.Bytes())
 }
 
 // calcRandomItemsCacheKey 计算 random items 在缓存空间中的 key 值
