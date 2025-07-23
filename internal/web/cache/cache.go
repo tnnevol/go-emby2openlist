@@ -6,6 +6,7 @@ import (
 	"io"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/constant"
@@ -66,6 +67,13 @@ func CacheableRouteMarker() gin.HandlerFunc {
 	}
 }
 
+// respBodyBufPool 用于缓冲响应体数据
+var respBodyBufPool = sync.Pool{
+	New: func() any {
+		return new(bytes.Buffer)
+	},
+}
+
 // RequestCacher 请求缓存中间件
 func RequestCacher() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -97,8 +105,9 @@ func RequestCacher() gin.HandlerFunc {
 		}
 
 		// 4 使用自定义的响应器
-		customWriter := &respCacheWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
+		customWriter := &respCacheWriter{body: respBodyBufPool.Get().(*bytes.Buffer), ResponseWriter: c.Writer}
 		c.Writer = customWriter
+		defer respBodyBufPool.Put(customWriter.body)
 
 		// 5 执行请求处理器
 		c.Next()
@@ -120,7 +129,7 @@ func RequestCacher() gin.HandlerFunc {
 		defer header.Del(HeaderKeySpace)
 		defer header.Del(HeaderKeySpaceKey)
 
-		go putCache(cacheKey, c, customWriter.body, respHeader)
+		go putCache(cacheKey, c, customWriter.body.Bytes(), respHeader)
 	}
 }
 

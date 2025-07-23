@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"bytes"
 	"strconv"
 	"sync"
 	"time"
@@ -111,7 +110,7 @@ func getCache(cacheKey string) (*respCache, bool) {
 }
 
 // putCache 设置缓存
-func putCache(cacheKey string, c *gin.Context, respBody *bytes.Buffer, respHeader respHeader) {
+func putCache(cacheKey string, c *gin.Context, respBody []byte, respHeader respHeader) {
 	if cacheKey == "" || c == nil || respBody == nil {
 		return
 	}
@@ -134,7 +133,7 @@ func putCache(cacheKey string, c *gin.Context, respBody *bytes.Buffer, respHeade
 
 	rc := &respCache{
 		code:     c.Writer.Status(),
-		body:     respBody.Bytes(),
+		body:     respBody,
 		cacheKey: cacheKey,
 		expired:  expiredMillis,
 		header:   respHeader,
