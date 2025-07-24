@@ -122,7 +122,7 @@ func RandomItemsWithLimit(c *gin.Context) {
 
 	c.Writer.WriteHeaderNow()
 
-	buf := bytess.CommonBuffer()
+	buf := bytess.CommonFixedBuffer()
 	defer buf.PutBack()
 	io.CopyBuffer(c.Writer, resp.Body, buf.Bytes())
 }

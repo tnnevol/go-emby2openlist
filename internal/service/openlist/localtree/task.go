@@ -233,7 +233,7 @@ func (rw *RawWriter) Write(task FileTask, localPath string) error {
 			return fmt.Errorf("请求 openlist 直链失败, 响应状态: %s", resp.Status)
 		}
 
-		buf := bytess.CommonBuffer()
+		buf := bytess.CommonFixedBuffer()
 		defer buf.PutBack()
 		if _, err = io.CopyBuffer(file, resp.Body, buf.Bytes()); err != nil {
 			return fmt.Errorf("写入 openlist 源文件到本地磁盘失败, 拷贝异常: %w", err)

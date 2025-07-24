@@ -4,6 +4,13 @@ import "sync"
 
 const CommonBufferSize = 32 * 1024
 
+var commonBufferPool = sync.Pool{
+	New: func() any {
+		buf := Buffer(make([]byte, CommonBufferSize))
+		return &buf
+	},
+}
+
 // Buffer 具备回收功能的缓冲区包装类型
 type Buffer []byte
 
@@ -14,17 +21,10 @@ func (b *Buffer) PutBack() {
 
 // Bytes 获取缓冲区字节切片
 func (b *Buffer) Bytes() []byte {
-	return *b
+	return append([]byte(nil), (*b)...)
 }
 
-var commonBufferPool = sync.Pool{
-	New: func() any {
-		buf := Buffer(make([]byte, CommonBufferSize))
-		return &buf
-	},
-}
-
-// CommonBuffer 获取一个可复用的固定大小的缓冲区
-func CommonBuffer() *Buffer {
+// CommonFixedBuffer 获取一个可复用的固定大小的缓冲区
+func CommonFixedBuffer() *Buffer {
 	return commonBufferPool.Get().(*Buffer)
 }

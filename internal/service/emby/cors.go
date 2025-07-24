@@ -37,7 +37,7 @@ func ChangeBaseVideoModuleCorsDefined(c *gin.Context) {
 	c.Status(http.StatusOK)
 	https.CloneHeader(c.Writer, resp.Header)
 
-	buf := bytess.CommonBuffer()
+	buf := bytess.CommonFixedBuffer()
 	defer buf.PutBack()
 	io.CopyBuffer(c.Writer, resp.Body, buf.Bytes())
 
