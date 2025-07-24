@@ -68,7 +68,7 @@ type FsOther struct {
 // FsGet /api/fs/get 接口响应数据结构
 type FsGet struct {
 	Name     string `json:"name"`     // 文件名
-	Size     int    `json:"size"`     // 文件大小
+	Size     int64  `json:"size"`     // 文件大小
 	IsDir    bool   `json:"is_dir"`   // 是否为文件夹
 	Modified string `json:"modified"` // 修改时间
 	Sign     string `json:"sign"`     // 文件签名
