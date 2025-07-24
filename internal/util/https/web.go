@@ -109,7 +109,7 @@ func ProxyPass(r *http.Request, w http.ResponseWriter, remote string) error {
 	CloneHeader(w, resp.Header)
 
 	// 3 回写响应体
-	buf := bytess.CommonBuffer()
+	buf := bytess.CommonFixedBuffer()
 	defer buf.PutBack()
 	io.CopyBuffer(w, resp.Body, buf.Bytes())
 	return err

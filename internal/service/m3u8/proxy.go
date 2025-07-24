@@ -132,7 +132,7 @@ func ProxySubtitle(c *gin.Context) {
 		https.CloneHeader(c.Writer, resp.Header)
 		c.Status(resp.StatusCode)
 
-		buf := bytess.CommonBuffer()
+		buf := bytess.CommonFixedBuffer()
 		defer buf.PutBack()
 		if _, err = io.CopyBuffer(c.Writer, resp.Body, buf.Bytes()); err != nil {
 			logs.Error("代理字幕失败: %v", err)
