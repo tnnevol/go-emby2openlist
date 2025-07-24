@@ -27,7 +27,7 @@ do
     fi
 
     # 编译
-    CGO_ENABLED=0 GOOS=${platform_info[0]} GOARCH=${platform_info[1]} go build -o "dist/$output_name" .
+    CGO_ENABLED=0 GOOS=${platform_info[0]} GOARCH=${platform_info[1]} go build -ldflags="-X main.ginMode=release" -o "dist/$output_name" .
 
     # 赋予可执行权限
     chmod +x "dist/$output_name"

@@ -20,6 +20,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var ginMode = gin.DebugMode
+
 func main() {
 	go func() { http.ListenAndServe(":60360", nil) }()
 
@@ -37,6 +39,7 @@ func main() {
 	}
 
 	logs.Info("正在启动服务...")
+	gin.SetMode(ginMode)
 	if err := web.Listen(); err != nil {
 		log.Fatal(colors.ToRed(err.Error()))
 	}
@@ -47,17 +50,12 @@ func parseFlag() (dataRoot string) {
 	ph := flag.Int("p", 8095, "HTTP 服务监听端口")
 	phs := flag.Int("ps", 8094, "HTTPS 服务监听端口")
 	printVersion := flag.Bool("version", false, "查看程序版本")
-	prod := flag.Bool("prod", false, "是否以生产环境运行")
 	dr := flag.String("dr", ".", "程序数据根目录")
 	flag.Parse()
 
 	if *printVersion {
 		fmt.Println(constant.CurrentVersion)
 		os.Exit(0)
-	}
-
-	if *prod {
-		gin.SetMode(gin.ReleaseMode)
 	}
 
 	dataRoot = "."
