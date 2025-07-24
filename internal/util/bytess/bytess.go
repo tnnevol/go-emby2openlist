@@ -21,7 +21,7 @@ func (b *Buffer) PutBack() {
 
 // Bytes 获取缓冲区字节切片
 func (b *Buffer) Bytes() []byte {
-	return append([]byte(nil), (*b)...)
+	return *b
 }
 
 // CommonFixedBuffer 获取一个可复用的固定大小的缓冲区
