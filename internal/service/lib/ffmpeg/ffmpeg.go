@@ -149,7 +149,7 @@ func ExtractMusicCover(path string) ([]byte, error) {
 		return nil, errors.New(eb.String()[strings.Index(eb.String(), OpenError):])
 	}
 
-	return out.Bytes(), nil
+	return append([]byte(nil), out.Bytes()...), nil
 }
 
 // GenSilentMP3Bytes 使用 ffmpeg 生成静音 MP3 并返回字节内容
@@ -172,5 +172,5 @@ func GenSilentMP3Bytes(durationSec float64) ([]byte, error) {
 	cmd.Stderr = nil
 	cmd.Run()
 
-	return out.Bytes(), nil
+	return append([]byte(nil), out.Bytes()...), nil
 }
