@@ -191,20 +191,33 @@ func handleRemotePlayback(c *gin.Context, itemInfo ItemInfo) bool {
 	}
 
 	mediaSources, ok := res.Data.Attr("MediaSources").Done()
-	if !ok || mediaSources.Len() != 1 {
+	if !ok || mediaSources.Empty() {
 		return false
 	}
 
-	ms, _ := mediaSources.Idx(0).Done()
-	iis, _ := ms.Attr("IsInfiniteStream").Bool()
-	if iis {
-		// 默认无限流为电视直播, 直接代理到源服务器
+	var haveReturned = errors.New("have returned")
+	err := mediaSources.RangeArr(func(index int, value *jsons.Item) error {
+		// 电视直播
+		iis, _ := value.Attr("IsInfiniteStream").Bool()
+		flag := iis
+
+		// 本地媒体
+		path, _ := value.Attr("Path").String()
+		if strings.HasPrefix(path, config.C.Emby.LocalMediaRoot) {
+			flag = true
+		}
+
+		if !flag {
+			return nil
+		}
+
+		// 特殊媒体直接代理至源服务器
 		c.Request.Body = originRequestBody
 		ProxyOrigin(c)
-		return true
-	}
+		return haveReturned
+	})
 
-	return false
+	return err == haveReturned
 }
 
 // useCacheSpacePlaybackInfo 请求缓存空间的 PlaybackInfo 信息, 前提是开启了缓存功能

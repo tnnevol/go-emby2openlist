@@ -22,14 +22,20 @@ import (
 
 // Redirect2Transcode 将 master 请求重定向到本地 ts 代理
 func Redirect2Transcode(c *gin.Context) {
-	// 只有三个必要的参数都获取到时, 才跳转到本地 ts 代理
 	templateId := c.Query("template_id")
 	apiKey := c.Query(QueryApiKeyName)
 	openlistPath := c.Query("openlist_path")
-	if strs.AnyEmpty(templateId, apiKey, openlistPath) {
+	if strs.AnyEmpty(templateId) {
 		ProxyOrigin(c)
 		return
 	}
+
+	// 只有 template id 时, 需要先获取 openlist path
+	if strs.AnyEmpty(openlistPath) {
+		Redirect2OpenlistLink(c)
+		return
+	}
+
 	tu, _ := url.Parse(https.ClientRequestHost(c.Request) + "/videos/proxy_playlist")
 	q := tu.Query()
 	q.Set("openlist_path", openlistPath)
@@ -82,7 +88,8 @@ func Redirect2OpenlistLink(c *gin.Context) {
 	// 5 如果是本地地址, 回源处理
 	if strings.HasPrefix(embyPath, config.C.Emby.LocalMediaRoot) {
 		logs.Info("本地媒体: %s, 回源处理", embyPath)
-		ProxyOrigin(c)
+		newUri := strings.Replace(c.Request.RequestURI, "stream", "original", 1)
+		c.Redirect(http.StatusTemporaryRedirect, newUri)
 		return
 	}
 
