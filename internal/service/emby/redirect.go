@@ -23,6 +23,15 @@ import (
 // Redirect2Transcode 将 master 请求重定向到本地 ts 代理
 func Redirect2Transcode(c *gin.Context) {
 	templateId := c.Query("template_id")
+	if strs.AnyEmpty(templateId) {
+		// 尝试从 mediaSourceId 中获取 templateId
+		itemInfo, err := resolveItemInfo(c, RouteTranscode)
+		if checkErr(c, err) {
+			return
+		}
+		templateId = itemInfo.MsInfo.TemplateId
+	}
+
 	apiKey := c.Query(QueryApiKeyName)
 	openlistPath := c.Query("openlist_path")
 	if strs.AnyEmpty(templateId) {
