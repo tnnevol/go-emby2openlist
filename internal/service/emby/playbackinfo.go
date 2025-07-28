@@ -53,7 +53,7 @@ func TransferPlaybackInfo(c *gin.Context) {
 	}
 
 	// 如果是远程资源, 直接代理到源服务器
-	if handleRemotePlayback(c, itemInfo) {
+	if handleSpecialPlayback(c, itemInfo) {
 		c.Header(cache.HeaderKeyExpired, "-1")
 		return
 	}
@@ -175,8 +175,8 @@ func TransferPlaybackInfo(c *gin.Context) {
 	jsons.OkResp(c.Writer, resJson)
 }
 
-// handleRemotePlayback 判断如果请求的 PlaybackInfo 信息是远程地址, 直接返回结果
-func handleRemotePlayback(c *gin.Context, itemInfo ItemInfo) bool {
+// handleSpecialPlayback 判断如果请求的 PlaybackInfo 信息是特殊类型, 直接代理回源服务
+func handleSpecialPlayback(c *gin.Context, itemInfo ItemInfo) bool {
 	// 请求必须携带 MediaSourceId
 	if itemInfo.MsInfo.Empty {
 		return false
@@ -204,6 +204,7 @@ func handleRemotePlayback(c *gin.Context, itemInfo ItemInfo) bool {
 		// 本地媒体
 		path, _ := value.Attr("Path").String()
 		if strings.HasPrefix(path, config.C.Emby.LocalMediaRoot) {
+			logs.Info("本地媒体: %s, 回源处理", path)
 			flag = true
 		}
 
