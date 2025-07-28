@@ -50,7 +50,7 @@ func initRulePatterns() {
 		// master 重定向到本地 m3u8 代理
 		{constant.Reg_ResourceMaster, emby.Redirect2Transcode},
 		// main 路由到直链接口
-		{constant.Reg_ResourceMain, emby.Redirect2OpenlistLink},
+		{constant.Reg_ResourceMain, emby.Redirect2Transcode},
 		// m3u8 转码播放列表
 		{constant.Reg_ProxyPlaylist, m3u8.ProxyPlaylist},
 		// ts 重定向到直链

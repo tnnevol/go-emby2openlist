@@ -79,13 +79,14 @@ func ProxyRequest(r *http.Request, remote string) (*http.Response, error) {
 	}
 
 	// 1 解析远程地址
-	rmtUrl, err := url.Parse(remote + r.URL.String())
+	rawUrl := remote + r.RequestURI
+	_, err := url.Parse(rawUrl)
 	if err != nil {
 		return nil, fmt.Errorf("解析远程地址失败: %v", err)
 	}
 
 	// 2 发送请求
-	return Request(r.Method, rmtUrl.String()).
+	return Request(r.Method, rawUrl).
 		Header(r.Header).
 		Body(r.Body).
 		Do()
