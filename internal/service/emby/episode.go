@@ -30,6 +30,7 @@ func ResortEpisodes(c *gin.Context) {
 	q.Del("Limit")
 	q.Del("StartIndex")
 	c.Request.URL.RawQuery = q.Encode()
+	c.Request.RequestURI = c.Request.URL.Path + "?" + q.Encode()
 
 	// 3 代理请求
 	c.Request.Header.Del("Accept-Encoding")
@@ -57,6 +58,7 @@ func ResortEpisodes(c *gin.Context) {
 	defer func() {
 		bytes, _ := json.Marshal(ih)
 		c.Header("Content-Length", strconv.Itoa(len(bytes)))
+		c.Writer.WriteHeaderNow()
 		c.Writer.Write(bytes)
 	}()
 
