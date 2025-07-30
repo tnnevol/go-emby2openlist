@@ -53,7 +53,7 @@ func HandleImages(c *gin.Context) {
 	q.Del("quality")
 	q.Del("Quality")
 	q.Set("Quality", strconv.Itoa(config.C.Emby.ImagesQuality))
-	c.Request.URL.RawQuery = q.Encode()
+	c.Request.RequestURI = c.Request.URL.Path + "?" + q.Encode()
 	ProxyOrigin(c)
 }
 
