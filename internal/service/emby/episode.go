@@ -29,8 +29,11 @@ func ResortEpisodes(c *gin.Context) {
 	q := c.Request.URL.Query()
 	q.Del("Limit")
 	q.Del("StartIndex")
-	c.Request.URL.RawQuery = q.Encode()
-	c.Request.RequestURI = c.Request.URL.Path + "?" + q.Encode()
+	var querySuffix string
+	if len(q) > 0 {
+		querySuffix = "?" + q.Encode()
+	}
+	c.Request.RequestURI = c.Request.URL.Path + querySuffix
 
 	// 3 代理请求
 	c.Request.Header.Del("Accept-Encoding")
