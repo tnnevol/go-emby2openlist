@@ -1,7 +1,7 @@
 package constant
 
 const (
-	CurrentVersion = "v2.2.4"
+	CurrentVersion = "v2.2.5"
 	RepoAddr       = "https://github.com/AmbitiousJun/go-emby2openlist"
 )
 
@@ -22,9 +22,9 @@ const (
 	Reg_ShowEpisodes   = `(?i)^/.*shows/.*/episodes\??`
 	Reg_VideoSubtitles = `(?i)^/.*videos/.*/subtitles`
 
-	Reg_ResourceStream    = `(?i)^/.*(videos|audio)/[^subtitles]*/(stream|universal)(\.\w+)?\??`
-	Reg_ResourceMaster    = `(?i)^/.*(videos|audio)/.*/(master)(\.\w+)?\??`
-	Reg_ResourceMain      = `(?i)^/.*(videos|audio)/.*/main.m3u8\??`
+	Reg_ResourceStream = `(?i)^/.*(videos|audio)/[^subtitles]*/(stream|universal)(\.\w+)?\??`
+	Reg_ResourceMaster = `(?i)^/.*(videos|audio)/.*/(master)(\.\w+)?\??`
+	Reg_ResourceMain   = `(?i)^/.*(videos|audio)/.*/main.m3u8\??`
 
 	Reg_ProxyPlaylist = `(?i)^/.*videos/proxy_playlist\??`
 	Reg_ProxyTs       = `(?i)^/.*videos/proxy_ts\??`
