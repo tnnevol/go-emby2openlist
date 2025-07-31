@@ -174,7 +174,7 @@
 1. 获取代码
 
 ```shell
-git clone --branch v2.2.5 --depth 1 https://ghfast.top/https://github.com/AmbitiousJun/go-emby2openlist
+git clone --branch v2.2.5 --depth 1 https://github.tbedu.top/https://github.com/AmbitiousJun/go-emby2openlist
 cd go-emby2openlist
 ```
 
