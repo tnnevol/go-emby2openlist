@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	durationReg = regexp.MustCompile(`Duration: (\d+):(\d+):(\d+)\.(\d+)`)
+	durationReg = regexp.MustCompile(`Duration: (\d+):(\d+):(\d+\.\d+)`)
 	albumReg    = regexp.MustCompile(`(?mi)album\s*:\s*(.+?)\s*$`)
 	artistReg   = regexp.MustCompile(`(?mi)artist\s*:\s*(.+?)\s*$`)
 	commentReg  = regexp.MustCompile(`(?mi)comment\s*:\s*(.+?)\s*$`)
@@ -28,18 +28,16 @@ func resolveDuration(raw string) time.Duration {
 	}
 
 	res := durationReg.FindStringSubmatch(raw)
-	if len(res) != 5 {
+	if len(res) != 4 {
 		return 0
 	}
 
 	hour, _ := strconv.Atoi(res[1])
 	minute, _ := strconv.Atoi(res[2])
-	second, _ := strconv.Atoi(res[3])
-	minSecond, _ := strconv.Atoi(res[4])
+	second, _ := strconv.ParseFloat(res[3], 64)
 	return time.Hour*time.Duration(hour) +
 		time.Minute*time.Duration(minute) +
-		time.Second*time.Duration(second) +
-		time.Millisecond*time.Duration(minSecond)*100
+		time.Duration(float64(time.Second)*second)
 }
 
 // resolveLyrics 解析 ffmpeg 的 Lyrics 参数
