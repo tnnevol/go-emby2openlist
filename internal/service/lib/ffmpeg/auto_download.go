@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/bytess"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/https"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs/colors"
@@ -121,15 +122,17 @@ func AutoDownloadExec(parentPath string) error {
 	var downloadErr error
 	totalBytesStr := resp.Header.Get("Content-Length")
 	totalBytes, err := strconv.Atoi(totalBytesStr)
+	buf := bytess.CommonFixedBuffer()
+	defer buf.PutBack()
 	if err != nil {
-		_, downloadErr = io.Copy(execFile, resp.Body)
+		_, downloadErr = io.CopyBuffer(execFile, resp.Body, buf.Bytes())
 	} else {
 		pw := progressWriter{
 			Reader:     resp.Body,
 			Total:      int64(totalBytes),
 			PrintedPct: -1,
 		}
-		_, downloadErr = io.Copy(execFile, &pw)
+		_, downloadErr = io.CopyBuffer(execFile, &pw, buf.Bytes())
 		fmt.Println()
 	}
 
