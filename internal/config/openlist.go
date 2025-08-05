@@ -54,6 +54,9 @@ type LocalTreeGen struct {
 	// ScanPrefixes 指定扫描前缀
 	ScanPrefixes []string `yaml:"scan-prefixes"`
 
+	// IgnoreContainers 忽略指定的容器
+	IgnoreContainers string `yaml:"ignore-containers"`
+
 	// virtualContainers 虚拟媒体容器集合 便于快速查询
 	virtualContainers map[string]struct{}
 
@@ -62,6 +65,9 @@ type LocalTreeGen struct {
 
 	// musicContainers 音乐媒体容器集合 便于快速查询
 	musicContainers map[string]struct{}
+
+	// ignoreContainers 忽略指定容器集合 便于快速查询
+	ignoreContainers map[string]struct{}
 }
 
 // Init 配置初始化
@@ -113,6 +119,12 @@ func (ltg *LocalTreeGen) Init() error {
 		ltg.musicContainers[strings.ToLower(s)] = struct{}{}
 	}
 
+	ss = strings.Split(strings.TrimSpace(ltg.IgnoreContainers), ",")
+	ltg.ignoreContainers = make(map[string]struct{}, len(ss))
+	for _, s := range ss {
+		ltg.ignoreContainers[strings.ToLower(s)] = struct{}{}
+	}
+
 	return nil
 }
 
@@ -134,6 +146,13 @@ func (ltg *LocalTreeGen) IsStrm(container string) bool {
 func (ltg *LocalTreeGen) IsMusic(container string) bool {
 	container = strings.ToLower(container)
 	_, ok := ltg.musicContainers[container]
+	return ok
+}
+
+// IsIgnore 判断一个容器是否需要被忽略
+func (ltg *LocalTreeGen) IsIgnore(container string) bool {
+	container = strings.ToLower(container)
+	_, ok := ltg.ignoreContainers[container]
 	return ok
 }
 
