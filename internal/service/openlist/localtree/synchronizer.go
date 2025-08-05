@@ -7,11 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/config"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/service/openlist"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/files"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/logs/colors"
+	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/trys"
 	"github.com/AmbitiousJun/go-emby2openlist/v2/internal/util/urls"
 	"golang.org/x/sync/errgroup"
 )
@@ -138,7 +140,14 @@ func (s *Synchronizer) InitSnapshot() error {
 // walkDir2SyncTasks 分页遍历 openlist 指定前缀目录下的文件, 加入到任务通道中
 func (s *Synchronizer) walkDir2SyncTasks(prefix string) error {
 	walker := openlist.WalkFsList(prefix, s.pageSize)
-	page, err := walker.Next()
+	var page openlist.FsList
+	var err error
+
+	err = trys.Try(func() (innerErr error) {
+		page, innerErr = walker.Next()
+		return
+	}, 3, time.Second*5)
+
 	for err == nil {
 		taskList := make([]FileTask, len(page.Content))
 		for i, info := range page.Content {
@@ -146,7 +155,11 @@ func (s *Synchronizer) walkDir2SyncTasks(prefix string) error {
 		}
 		s.toSyncTasks <- taskList
 		atomic.AddInt32(&s.activeTaskCount, 1)
-		page, err = walker.Next()
+
+		err = trys.Try(func() (innerErr error) {
+			page, innerErr = walker.Next()
+			return
+		}, 3, time.Second*5)
 	}
 	if err != openlist.ErrWalkEOF {
 		return err
