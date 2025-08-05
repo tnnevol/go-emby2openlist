@@ -143,12 +143,17 @@ func (s *Synchronizer) walkDir2SyncTasks(prefix string) error {
 	var page openlist.FsList
 	var err error
 
+	eof := false
 	err = trys.Try(func() (innerErr error) {
 		page, innerErr = walker.Next()
+		if innerErr == openlist.ErrWalkEOF {
+			eof = true
+			return nil
+		}
 		return
 	}, 3, time.Second*5)
 
-	for err == nil {
+	for err == nil && !eof {
 		taskList := make([]FileTask, len(page.Content))
 		for i, info := range page.Content {
 			taskList[i] = FsGetTask(prefix, info)
@@ -158,13 +163,14 @@ func (s *Synchronizer) walkDir2SyncTasks(prefix string) error {
 
 		err = trys.Try(func() (innerErr error) {
 			page, innerErr = walker.Next()
+			if innerErr == openlist.ErrWalkEOF {
+				eof = true
+				return nil
+			}
 			return
 		}, 3, time.Second*5)
 	}
-	if err != openlist.ErrWalkEOF {
-		return err
-	}
-	return nil
+	return err
 }
 
 // handleSyncTasks 广度遍历 toSyncs 任务通道进行同步
