@@ -220,10 +220,16 @@ func (s *Synchronizer) handleSyncTasks(okTaskChan chan<- FileTask) {
 			case <-s.ctx.Done():
 				return nil
 			default:
-				if !config.C.Openlist.LocalTreeGen.IsValidPrefix(task.Path) {
+				// 根据用户配置忽略特定文件和目录
+				cfg := config.C.Openlist.LocalTreeGen
+				if !cfg.IsValidPrefix(task.Path) {
+					continue
+				}
+				if !task.IsDir && cfg.IsIgnore(task.Container) {
 					continue
 				}
 
+				// 处理任务
 				if task.IsDir {
 					if err := handleDir(task); err != nil {
 						return err
