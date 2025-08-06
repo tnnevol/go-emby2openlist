@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
-	"strings"
 	"sync"
 )
 
@@ -24,18 +23,15 @@ func InspectInfo(path string) (Info, error) {
 	defer mu.Unlock()
 
 	cmd := exec.Command(execPath, "-threads", "1", "-i", path)
-	var eb bytes.Buffer
-	cmd.Stderr = &eb
-	cmd.Run()
 
-	output := eb.String()
-	if strings.Contains(output, OpenError) {
-		return Info{}, errors.New(output[strings.Index(output, OpenError):])
+	outputBytes, _ := cmd.CombinedOutput()
+	if bytes.Contains(outputBytes, []byte(OpenError)) {
+		return Info{}, errors.New(string(outputBytes[bytes.Index(outputBytes, []byte(OpenError)):]))
 	}
 
 	i := Info{}
-	if durationReg.MatchString(output) {
-		i.Duration = resolveDuration(output)
+	if durationReg.Match(outputBytes) {
+		i.Duration = resolveDuration(string(outputBytes))
 	}
 
 	return i, nil
@@ -50,17 +46,15 @@ func InspectMusic(path string) (Music, error) {
 	defer mu.Unlock()
 
 	cmd := exec.Command(execPath, "-threads", "1", "-i", path)
-	var eb bytes.Buffer
-	cmd.Stderr = &eb
-	cmd.Run()
+	outputBytes, _ := cmd.CombinedOutput()
 
-	output := eb.String()
-	if strings.Contains(output, OpenError) {
-		return Music{}, errors.New(output[strings.Index(output, OpenError):])
+	if bytes.Contains(outputBytes, []byte(OpenError)) {
+		return Music{}, errors.New(string(outputBytes[bytes.Index(outputBytes, []byte(OpenError)):]))
 	}
 
 	m := Music{}
 	wg := sync.WaitGroup{}
+	output := string(outputBytes)
 	wg.Add(10)
 
 	go func() {
@@ -139,17 +133,17 @@ func ExtractMusicCover(path string) ([]byte, error) {
 
 	cmd := exec.Command(execPath, "-threads", "1", "-i", path, "-an", "-vframes", "1", "-f", "image2", "-vcodec", "mjpeg", "pipe:1")
 
-	var out bytes.Buffer
-	var eb bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &eb
-	cmd.Run()
-
-	if strings.Contains(eb.String(), OpenError) {
-		return nil, errors.New(eb.String()[strings.Index(eb.String(), OpenError):])
+	outputBytes, err := cmd.Output()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			stderr := exitErr.Stderr
+			if bytes.Contains(stderr, []byte(OpenError)) {
+				return nil, errors.New(string(stderr[bytes.Index(stderr, []byte(OpenError)):]))
+			}
+		}
 	}
 
-	return append([]byte(nil), out.Bytes()...), nil
+	return append([]byte(nil), outputBytes...), nil
 }
 
 // GenSilentMP3Bytes 使用 ffmpeg 生成静音 MP3 并返回字节内容
@@ -167,10 +161,7 @@ func GenSilentMP3Bytes(durationSec float64) ([]byte, error) {
 	}
 
 	cmd := exec.Command(execPath, args...)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = nil
-	cmd.Run()
+	outputBytes, _ := cmd.Output()
 
-	return append([]byte(nil), out.Bytes()...), nil
+	return append([]byte(nil), outputBytes...), nil
 }
