@@ -383,7 +383,7 @@ func resolveItemInfo(c *gin.Context, routeType RouteType) (ItemInfo, error) {
 	switch routeType {
 	case RouteItems:
 		itemInfo.Id = filepath.Base(uri)
-	case RoutePlaybackInfo, RouteStream, RouteSyncDownload, RouteTranscode:
+	case RoutePlaybackInfo, RouteStream, RouteSyncDownload, RouteTranscode, RouteOriginal:
 		itemInfo.Id = filepath.Base(filepath.Dir(uri))
 	default:
 		return ItemInfo{}, fmt.Errorf("不支持的 RouteType: %s", routeType)
