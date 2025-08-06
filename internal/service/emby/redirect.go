@@ -158,6 +158,26 @@ func Redirect2OpenlistLink(c *gin.Context) {
 	checkErr(c, fmt.Errorf("获取直链失败: %s", allErrors.String()))
 }
 
+// ProxyOriginalResource 拦截 original 接口
+func ProxyOriginalResource(c *gin.Context) {
+	itemInfo, err := resolveItemInfo(c, RouteOriginal)
+	if checkErr(c, err) {
+		return
+	}
+
+	embyPath, err := getEmbyFileLocalPath(itemInfo)
+	if checkErr(c, err) {
+		return
+	}
+
+	// 如果是本地媒体, 代理回源
+	if strings.HasPrefix(embyPath, config.C.Emby.LocalMediaRoot) {
+		ProxyOrigin(c)
+		return
+	}
+	Redirect2OpenlistLink(c)
+}
+
 // checkErr 检查 err 是否为空
 // 不为空则根据错误处理策略返回响应
 //

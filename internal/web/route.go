@@ -51,6 +51,8 @@ func initRulePatterns() {
 		{constant.Reg_ResourceMaster, emby.Redirect2Transcode},
 		// main 路由到直链接口
 		{constant.Reg_ResourceMain, emby.Redirect2Transcode},
+		// 处理 original 资源
+		{constant.Reg_ResourceOriginal, emby.ProxyOriginalResource},
 		// m3u8 转码播放列表
 		{constant.Reg_ProxyPlaylist, m3u8.ProxyPlaylist},
 		// ts 重定向到直链

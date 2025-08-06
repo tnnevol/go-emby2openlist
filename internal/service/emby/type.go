@@ -32,6 +32,7 @@ const (
 	RouteStream       RouteType = "Stream"
 	RouteSyncDownload RouteType = "SyncDownload"
 	RouteTranscode    RouteType = "Transcode"
+	RouteOriginal     RouteType = "Original"
 )
 
 // ItemInfo emby 资源 item 解析信息
