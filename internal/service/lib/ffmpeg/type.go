@@ -16,6 +16,7 @@ type Music struct {
 	Date    string // 发布日期
 	Lyrics  string // 歌词
 	Title   string // 标题
-	Track   int    // 轨道
+	Track   string // 轨道 (track/tracktotal)
+	Disc    string // 光盘 (disc/disctotal)
 	Genre   string // 流派
 }

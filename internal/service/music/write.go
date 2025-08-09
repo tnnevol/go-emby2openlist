@@ -17,7 +17,7 @@ type MusicNFO struct {
 	Artist  string   `xml:"artist,omitempty"`
 	Album   string   `xml:"album,omitempty"`
 	Year    string   `xml:"year,omitempty"`
-	Track   int      `xml:"track,omitempty"`
+	Track   string   `xml:"track,omitempty"`
 	Lyrics  string   `xml:"lyrics,omitempty"`
 	Comment string   `xml:"comment,omitempty"`
 }
@@ -59,7 +59,8 @@ func WriteFakeMP3(filePath string, meta ffmpeg.Music, pic []byte) error {
 	id3tag.SetYear(meta.Date)
 	id3tag.SetGenre(meta.Genre)
 
-	id3tag.AddTextFrame("TRCK", id3v2.EncodingUTF8, fmt.Sprintf("%d", meta.Track))
+	id3tag.AddTextFrame("TRCK", id3v2.EncodingUTF8, meta.Track)
+	id3tag.AddTextFrame("TPOS", id3v2.EncodingUTF8, meta.Disc)
 
 	if l := meta.Lyrics; l != "" {
 		id3tag.AddUnsynchronisedLyricsFrame(id3v2.UnsynchronisedLyricsFrame{
