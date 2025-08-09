@@ -1,6 +1,7 @@
 package ffmpeg
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -8,17 +9,20 @@ import (
 )
 
 var (
-	durationReg = regexp.MustCompile(`Duration: (\d+):(\d+):(\d+\.\d+)`)
-	albumReg    = regexp.MustCompile(`(?mi)album\s*:\s*(.+?)\s*$`)
-	artistReg   = regexp.MustCompile(`(?mi)artist\s*:\s*(.+?)\s*$`)
-	commentReg  = regexp.MustCompile(`(?mi)comment\s*:\s*(.+?)\s*$`)
-	dateReg     = regexp.MustCompile(`(?mi)date\s*:\s*(.+?)\s*$`)
-	titleReg    = regexp.MustCompile(`(?mi)title\s*:\s*(.+?)\s*$`)
-	titleTiReg  = regexp.MustCompile(`(?mi):\s*\[ti:(.*?)\]\s*$`)
-	trackReg    = regexp.MustCompile(`(?mi)track\s*:\s*(.+?)\s*$`)
-	genreReg    = regexp.MustCompile(`(?mi)genre\s*:\s*(.+?)\s*$`)
-	tdorReg     = regexp.MustCompile(`(?mi)tdor\s*:\s*(.+?)\s*$`)
-	lyricsReg   = regexp.MustCompile(`(?mi):\s*(\[.*?\].*?)\s*$`)
+	durationReg   = regexp.MustCompile(`Duration: (\d+):(\d+):(\d+\.\d+)`)
+	albumReg      = regexp.MustCompile(`(?mi)album\s*:\s*(.+?)\s*$`)
+	artistReg     = regexp.MustCompile(`(?mi)artist\s*:\s*(.+?)\s*$`)
+	commentReg    = regexp.MustCompile(`(?mi)comment\s*:\s*(.+?)\s*$`)
+	dateReg       = regexp.MustCompile(`(?mi)date\s*:\s*(.+?)\s*$`)
+	titleReg      = regexp.MustCompile(`(?mi)title\s*:\s*(.+?)\s*$`)
+	titleTiReg    = regexp.MustCompile(`(?mi):\s*\[ti:(.*?)\]\s*$`)
+	trackReg      = regexp.MustCompile(`(?mi)track\s*:\s*(.+?)\s*$`)
+	trackTotalReg = regexp.MustCompile(`(?mi)tracktotal\s*:\s*(.+?)\s*$`)
+	discReg       = regexp.MustCompile(`(?mi)disc\s*:\s*(.+?)\s*$`)
+	discTotalReg  = regexp.MustCompile(`(?mi)disctotal\s*:\s*(.+?)\s*$`)
+	genreReg      = regexp.MustCompile(`(?mi)genre\s*:\s*(.+?)\s*$`)
+	tdorReg       = regexp.MustCompile(`(?mi)tdor\s*:\s*(.+?)\s*$`)
+	lyricsReg     = regexp.MustCompile(`(?mi):\s*(\[.*?\].*?)\s*$`)
 )
 
 // resolveDuration 解析 ffmpeg 的 Duration 参数
@@ -60,20 +64,41 @@ func resolveLyrics(raw string) string {
 }
 
 // resolveTrack 解析 ffmpeg 的 Track 参数
-func resolveTrack(raw string) int {
+func resolveTrack(raw string) string {
 	if !trackReg.MatchString(raw) {
-		return 0
+		return ""
 	}
 
-	track := trackReg.FindStringSubmatch(raw)[1]
-	segIdx := strings.Index(track, "/")
-	if segIdx != -1 {
-		track = track[:segIdx]
+	track := strings.TrimSpace(trackReg.FindStringSubmatch(raw)[1])
+	if strings.Contains(track, "/") {
+		return track
 	}
 
-	trackNum, _ := strconv.Atoi(track)
-	return trackNum
+	// 尝试解析总轨道数
+	if !trackTotalReg.MatchString(raw) {
+		return track
+	}
+	trackTotal := strings.TrimSpace(trackTotalReg.FindStringSubmatch(raw)[1])
+	return fmt.Sprintf("%s/%s", track, trackTotal)
+}
 
+// resolveDisc 解析 ffmpeg 的 Disc 参数
+func resolveDisc(raw string) string {
+	if !discReg.MatchString(raw) {
+		return ""
+	}
+
+	disc := strings.TrimSpace(discReg.FindStringSubmatch(raw)[1])
+	if strings.Contains(disc, "/") {
+		return disc
+	}
+
+	// 尝试解析总光盘数
+	if !discTotalReg.MatchString(raw) {
+		return disc
+	}
+	discTotal := strings.TrimSpace(discTotalReg.FindStringSubmatch(raw)[1])
+	return fmt.Sprintf("%s/%s", disc, discTotal)
 }
 
 // resolveTitle 解析 ffmpeg 的 title 参数

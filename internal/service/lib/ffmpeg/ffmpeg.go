@@ -55,7 +55,7 @@ func InspectMusic(path string) (Music, error) {
 	m := Music{}
 	wg := sync.WaitGroup{}
 	output := string(outputBytes)
-	wg.Add(10)
+	wg.Add(11)
 
 	go func() {
 		defer wg.Done()
@@ -112,6 +112,11 @@ func InspectMusic(path string) (Music, error) {
 	go func() {
 		defer wg.Done()
 		m.Track = resolveTrack(output)
+	}()
+
+	go func() {
+		defer wg.Done()
+		m.Disc = resolveDisc(output)
 	}()
 
 	go func() {
