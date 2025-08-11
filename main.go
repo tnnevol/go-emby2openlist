@@ -47,8 +47,8 @@ func main() {
 
 // parseFlag 转换命令行参数
 func parseFlag() (dataRoot string) {
-	ph := flag.Int("p", 8095, "HTTP 服务监听端口")
-	phs := flag.Int("ps", 8094, "HTTPS 服务监听端口")
+	ph := flag.Int("p", 8097, "HTTP 服务监听端口")
+	phs := flag.Int("ps", 8098, "HTTPS 服务监听端口")
 	printVersion := flag.Bool("version", false, "查看程序版本")
 	dr := flag.String("dr", ".", "程序数据根目录")
 	flag.Parse()
